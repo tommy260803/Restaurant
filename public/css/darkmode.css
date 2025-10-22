@@ -1,0 +1,164 @@
+:root {
+    /* Light mode */
+    --light-bg: linear-gradient(to bottom, #F1F3FF, #CBD4FF);
+    --light-custom-sidebar: #151A2D;
+    --light-text: #FFFFFF;
+    --light-hover: #2A3047;
+    --light-card: #FFFFFF;
+    --light-card-text: #333333;
+
+    /* Dark mode */
+    --dark-bg: #121212;
+    --dark-sidebar: #1E1E1E;
+    --dark-text: #E0E0E0;
+    --dark-hover: #2A2A2A;
+    --dark-card: #1E1E1E;
+    --dark-card-text: #F5F5F5;
+    --dark-border: #333;
+    --dark-muted: #AAAAAA;
+    --dark-hover-bg: #2D2D2D;
+
+    --transition: all 0.4s ease;
+}
+
+/* === Dark Mode General === */
+body.dark-mode {
+    background: var(--dark-bg);
+    color: var(--dark-text);
+    transition: var(--transition);
+}
+
+body.dark-mode a {
+    color: #90CAF9;
+}
+
+body.dark-mode a:hover {
+    color: #BBDEFB;
+}
+
+/* === Sidebar === */
+body.dark-mode .custom-sidebar {
+    background: var(--dark-sidebar);
+    color: var(--dark-text);
+    transition: var(--transition);
+}
+
+body.dark-mode .custom-nav-link {
+    color: var(--dark-text);
+}
+
+body.dark-mode .custom-nav-link:hover,
+body.dark-mode .custom-nav-item:hover {
+    background: var(--dark-hover-bg);
+    color: #FFFFFF;
+}
+
+/* === Navbar === */
+body.dark-mode .navbar {
+    background-color: var(--dark-sidebar);
+    border-bottom: 1px solid var(--dark-border);
+}
+
+body.dark-mode .navbar .navbar-brand {
+    color: var(--dark-text);
+}
+
+body.dark-mode .navbar .dropdown-menu {
+    background-color: var(--dark-card);
+    color: var(--dark-card-text);
+}
+
+body.dark-mode .dropdown-item {
+    color: var(--dark-card-text);
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: var(--dark-hover-bg);
+}
+
+/* === Cards === */
+body.dark-mode .card,
+body.dark-mode .stat-card {
+    background: var(--dark-card);
+    color: var(--dark-card-text);
+    border: 1px solid var(--dark-border);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* === Stat Labels === */
+body.dark-mode .stat-card .stat-label {
+    color: var(--dark-muted);
+}
+
+/* === Tables === */
+body.dark-mode .table {
+    color: var(--dark-card-text);
+}
+
+body.dark-mode .table th,
+body.dark-mode .table td {
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .table-striped>tbody>tr:nth-of-type(odd)>* {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--dark-card-text);
+}
+
+/* === Misc === */
+body.dark-mode .notification-badge {
+    background-color: #FF6B6B;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background-color: var(--dark-card);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: var(--dark-muted);
+}
+
+body.dark-mode .form-control:focus {
+    background-color: var(--dark-card);
+    color: var(--dark-text);
+    border-color: #90CAF9;
+    box-shadow: none;
+}
+
+/* Buttons */
+body.dark-mode .btn {
+    background-color: #2A2A2A;
+    color: #E0E0E0;
+    border: none;
+}
+
+body.dark-mode .btn:hover {
+    background-color: #3A3A3A;
+    color: #FFFFFF;
+}
+/* === DARKMODE PARA LISTA PERSONAS === */
+:root {
+            --primary-bg: #4e73df;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --table-bg: #f8f9fc;
+            --table-border: #dee2e6;
+            --input-bg: #ffffff;
+            --input-border: #ced4da;
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode {
+            --primary-bg: #1a3c6d;
+            --card-bg: #1c2526;
+            --text-color: #e0e0e0;
+            --table-bg: #2c3e50;
+            --table-border: #4b5e6f;
+            --input-bg: #2c3e50;
+            --input-border: #4b5e6f;
+        }
