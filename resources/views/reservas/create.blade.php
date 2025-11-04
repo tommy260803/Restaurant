@@ -453,7 +453,7 @@ document.addEventListener('alpine:init', () => {
                 // Limpiar draft guardado
                 localStorage.removeItem('reserva_draft');
                 // Redirigir a la página de confirmación
-                window.location.href = '/reservas/confirmacion/' + data.reserva_id;
+                window.location.href = '/reservas/' + data.reserva_id + '/confirmacion';
 
             } catch (err) {
                 console.error(err);

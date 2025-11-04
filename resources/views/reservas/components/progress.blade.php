@@ -43,7 +43,7 @@
                 <div class="step-circle">
                     <i class="fas fa-check"></i>
                 </div>
-                <div class="step-label">Confirmar</div>
+                <div class="step-label">Resumen</div>
             </div>
             <div class="step-line" :class="{ 'completed': currentStep > 5 }"></div>
 

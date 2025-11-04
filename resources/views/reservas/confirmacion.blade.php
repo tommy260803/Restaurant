@@ -1,283 +1,16 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            
-            <!-- Animación de Éxito -->
-            <div class="text-center mb-5 success-animation">
-                <div class="success-checkmark">
-                    <div class="check-icon">
-                        <span class="icon-line line-tip"></span>
-                        <span class="icon-line line-long"></span>
-                        <div class="icon-circle"></div>
-                        <div class="icon-fix"></div>
-                    </div>
-                </div>
-                
-                <h1 class="display-4 fw-bold text-success mt-4 animate-fade-in">
-                    ¡Reserva Confirmada!
-                </h1>
-                <p class="lead text-muted animate-fade-in-delay">
-                    Tu mesa está reservada y lista para ti
-                </p>
-                
-                <!-- Código de Confirmación -->
-                <div class="confirmation-code mt-4 animate-fade-in-delay-2">
-                    <span class="text-muted small d-block mb-2">Código de confirmación</span>
-                    <span class="code-display">{{ $reserva->codigo_confirmacion }}</span>
-                </div>
-            </div>
-
-            <!-- Card Principal -->
-            <div class="card shadow-lg border-0 mb-4 animate-slide-up">
-                <div class="card-header bg-gradient-success text-white py-3">
-                    <h4 class="mb-0 text-center">
-                        <i class="fas fa-clipboard-list me-2"></i>Detalles de tu Reserva
-                    </h4>
-                </div>
-                
-                <div class="card-body p-4">
-                    <div class="row">
-                        <!-- Columna Izquierda: Información -->
-                        <div class="col-md-7">
-                            
-                            <!-- Datos de Contacto -->
-                            <div class="mb-4 pb-3 border-bottom">
-                                <h5 class="fw-bold text-dark mb-3">
-                                    <i class="fas fa-user-circle me-2 text-primary"></i>Datos de contacto
-                                </h5>
-                                <div class="ps-3">
-                                    <p class="mb-2 fs-5 fw-semibold">{{ $reserva->nombre }}</p>
-                                    <p class="mb-2 text-muted">
-                                        <i class="fas fa-phone me-2"></i>{{ $reserva->telefono }}
-                                    </p>
-                                    <p class="mb-0 text-muted">
-                                        <i class="fas fa-envelope me-2"></i>{{ $reserva->email }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Fecha y Hora -->
-                            <div class="mb-4 pb-3 border-bottom">
-                                <h5 class="fw-bold text-dark mb-3">
-                                    <i class="fas fa-calendar-alt me-2 text-success"></i>Fecha y hora
-                                </h5>
-                                <div class="ps-3">
-                                    <p class="mb-2 fs-5 fw-semibold">
-                                        {{ \Carbon\Carbon::parse($reserva->fecha)->locale('es')->isoFormat('dddd D [de] MMMM, YYYY') }}
-                                    </p>
-                                    <p class="mb-0 text-muted">
-                                        <i class="fas fa-clock me-2"></i>{{ \Carbon\Carbon::parse($reserva->hora)->format('g:i A') }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Mesa -->
-                            <div class="mb-4 pb-3 border-bottom">
-                                <h5 class="fw-bold text-dark mb-3">
-                                    <i class="fas fa-chair me-2 text-warning"></i>Mesa reservada
-                                </h5>
-                                <div class="ps-3">
-                                    <p class="mb-2 fs-5 fw-semibold">
-                                        Mesa #{{ $reserva->mesa->numero }} - {{ $reserva->mesa->ubicacion }}
-                                    </p>
-                                    <p class="mb-0 text-muted">
-                                        <i class="fas fa-users me-2"></i>{{ $reserva->personas }} {{ $reserva->personas == 1 ? 'persona' : 'personas' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Pre-orden -->
-                            @if(isset($reserva->pedidos) && $reserva->pedidos->count() > 0)
-                            <div class="mb-4 pb-3 border-bottom">
-                                <h5 class="fw-bold text-dark mb-3">
-                                    <i class="fas fa-utensils me-2 text-danger"></i>Pre-orden
-                                </h5>
-                                <div class="ps-3">
-                                    @php $subtotal = 0; @endphp
-                                    @foreach($reserva->pedidos as $item)
-                                        @php 
-                                            $totalItem = $item->cantidad * $item->precio;
-                                            $subtotal += $totalItem;
-                                        @endphp
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>{{ $item->cantidad }}x {{ $item->nombre }}</span>
-                                            <span class="fw-semibold">S/ {{ number_format($totalItem, 2) }}</span>
-                                        </div>
-                                    @endforeach
-                                    <hr class="dashed-hr">
-                                    <div class="d-flex justify-content-between">
-                                        <strong>Subtotal:</strong>
-                                        <strong class="text-success">S/ {{ number_format($subtotal, 2) }}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            <!-- Notas -->
-                            @if($reserva->notas)
-                            <div class="mb-3">
-                                <h5 class="fw-bold text-dark mb-3">
-                                    <i class="fas fa-comment-dots me-2 text-info"></i>Notas especiales
-                                </h5>
-                                <div class="ps-3">
-                                    <div class="alert alert-info mb-0">
-                                        <i class="fas fa-quote-left me-2"></i>
-                                        {{ $reserva->notas }}
-                                        <i class="fas fa-quote-right ms-2"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                        </div>
-
-                        <!-- Columna Derecha: QR Code -->
-                        <div class="col-md-5">
-                            <div class="qr-container text-center sticky-qr">
-                                <div class="qr-wrapper p-4 bg-light rounded">
-                                    <h5 class="mb-3 fw-bold">Código QR</h5>
-                                    <div class="qr-code-box">
-                                        {!! QrCode::size(200)->generate($reserva->codigo_confirmacion) !!}
-                                    </div>
-                                    <p class="text-muted small mt-3 mb-0">
-                                        Presenta este código al llegar al restaurante
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botones de Acción -->
-            <div class="card shadow-sm border-0 mb-4 animate-slide-up-delay">
-                <div class="card-body p-4">
-                    <h5 class="mb-4 text-center fw-bold">
-                        <i class="fas fa-tools me-2"></i>Acciones Rápidas
-                    </h5>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <a href="{{ route('reserva.pdf', $reserva->id) }}" 
-                               class="btn btn-outline-danger btn-lg w-100 btn-action">
-                                <i class="fas fa-file-pdf me-2"></i>
-                                <span>Descargar PDF</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <form action="{{ route('reserva.reenviar-email', $reserva->id) }}" method="POST" class="d-inline w-100">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-primary btn-lg w-100 btn-action">
-                                    <i class="fas fa-envelope me-2"></i>
-                                    <span>Reenviar Email</span>
-                                </button>
-                            </form>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <a href="{{ route('reserva.google-calendar', $reserva->id) }}" 
-                               target="_blank"
-                               class="btn btn-outline-success btn-lg w-100 btn-action">
-                                <i class="fab fa-google me-2"></i>
-                                <span>Agregar a Calendar</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <a href="{{ route('home') }}" 
-                               class="btn btn-outline-dark btn-lg w-100 btn-action">
-                                <i class="fas fa-home me-2"></i>
-                                <span>Volver al Inicio</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Instrucciones Importantes -->
-            <div class="card shadow-sm border-warning border-2 animate-slide-up-delay-2">
-                <div class="card-header bg-warning text-dark py-3">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Información Importante
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="instruction-item">
-                        <div class="instruction-icon bg-primary">
-                            <i class="fas fa-envelope-open-text"></i>
-                        </div>
-                        <div class="instruction-text">
-                            <strong>Confirmación por Email</strong>
-                            <p class="mb-0 text-muted">Te enviamos un correo con todos los detalles de tu reserva a <strong>{{ $reserva->email }}</strong></p>
-                        </div>
-                    </div>
-
-                    <div class="instruction-item">
-                        <div class="instruction-icon bg-success">
-                            <i class="fas fa-qrcode"></i>
-                        </div>
-                        <div class="instruction-text">
-                            <strong>Código QR</strong>
-                            <p class="mb-0 text-muted">Presenta este código QR o tu código de confirmación al llegar al restaurante</p>
-                        </div>
-                    </div>
-
-                    <div class="instruction-item">
-                        <div class="instruction-icon bg-info">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="instruction-text">
-                            <strong>Tiempo de Llegada</strong>
-                            <p class="mb-0 text-muted">Por favor llega 10 minutos antes de tu hora reservada. Te esperamos hasta 15 minutos después</p>
-                        </div>
-                    </div>
-
-                    <div class="instruction-item mb-0">
-                        <div class="instruction-icon bg-danger">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <div class="instruction-text">
-                            <strong>Política de Cancelación</strong>
-                            <p class="mb-0 text-muted">Puedes cancelar o modificar tu reserva hasta 2 horas antes sin costo alguno</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Compartir en Redes -->
-            <div class="text-center mt-4 animate-fade-in-delay-3">
-                <p class="text-muted mb-3">Comparte tu experiencia:</p>
-                <div class="social-share">
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}" 
-                       target="_blank" 
-                       class="btn btn-outline-primary btn-sm rounded-circle me-2">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="https://twitter.com/intent/tweet?text=¡Acabo de hacer mi reserva!" 
-                       target="_blank" 
-                       class="btn btn-outline-info btn-sm rounded-circle me-2">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="https://api.whatsapp.com/send?text=¡Mira mi reserva!" 
-                       target="_blank" 
-                       class="btn btn-outline-success btn-sm rounded-circle">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- Canvas para Confeti -->
-<canvas id="confetti-canvas"></canvas>
-
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Confirmada</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
 /* Animación del Check de Éxito */
 .success-checkmark {
     width: 120px;
@@ -543,7 +276,287 @@
     pointer-events: none;
     z-index: 9999;
 }
-</style>
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Animación de Éxito -->
+            <div class="text-center mb-5 success-animation">
+                <div class="success-checkmark">
+                    <div class="check-icon">
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
+                    </div>
+                </div>
+                
+                <h1 class="display-4 fw-bold text-success mt-4 animate-fade-in">
+                    ¡Reserva Confirmada!
+                </h1>
+                <p class="lead text-muted animate-fade-in-delay">
+                    Tu mesa está reservada y lista para ti
+                </p>
+                
+                <!-- Código de Confirmación -->
+                <div class="confirmation-code mt-4 animate-fade-in-delay-2">
+                    <span class="text-muted small d-block mb-2">Código de confirmación</span>
+                    <span class="code-display">{{ $reserva->codigo_confirmacion }}</span>
+                </div>
+            </div>
+
+            <!-- Card Principal -->
+            <div class="card shadow-lg border-0 mb-4 animate-slide-up">
+                <div class="card-header bg-gradient-success text-white py-3">
+                    <h4 class="mb-0 text-center">
+                        <i class="fas fa-clipboard-list me-2"></i>Detalles de tu Reserva
+                    </h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Columna Izquierda: Información -->
+                        <div class="col-md-7">
+                            
+                            <!-- Datos de Contacto -->
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-user-circle me-2 text-primary"></i>Datos de contacto
+                                </h5>
+                                <div class="ps-3">
+                                    <p class="mb-2 fs-5 fw-semibold">{{ $reserva->nombre }}</p>
+                                    <p class="mb-2 text-muted">
+                                        <i class="fas fa-phone me-2"></i>{{ $reserva->telefono }}
+                                    </p>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-envelope me-2"></i>{{ $reserva->email }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Fecha y Hora -->
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-calendar-alt me-2 text-success"></i>Fecha y hora
+                                </h5>
+                                <div class="ps-3">
+                                    <p class="mb-2 fs-5 fw-semibold">
+                                        {{ \Carbon\Carbon::parse($reserva->fecha)->locale('es')->isoFormat('dddd D [de] MMMM, YYYY') }}
+                                    </p>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-clock me-2"></i>{{ \Carbon\Carbon::parse($reserva->hora)->format('g:i A') }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Mesa -->
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-chair me-2 text-warning"></i>Mesa reservada
+                                </h5>
+                                <div class="ps-3">
+                                    <p class="mb-2 fs-5 fw-semibold">
+                                        Mesa #{{ $reserva->mesa->numero }} - {{ $reserva->mesa->ubicacion }}
+                                    </p>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-users me-2"></i>{{ $reserva->personas }} {{ $reserva->personas == 1 ? 'persona' : 'personas' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Pre-orden -->
+                            @if(isset($reserva->pedidos) && $reserva->pedidos->count() > 0)
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-utensils me-2 text-danger"></i>Pre-orden
+                                </h5>
+                                <div class="ps-3">
+                                    @php $subtotal = 0; @endphp
+                                    @foreach($reserva->pedidos as $item)
+                                        @php 
+                                            $cantidad = $item->pivot->cantidad ?? 0;
+                                            $precio = $item->pivot->precio ?? 0;
+                                            $totalItem = $cantidad * $precio;
+                                            $subtotal += $totalItem;
+                                        @endphp
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>{{ $cantidad }}x {{ $item->nombre }}</span>
+                                            <span class="fw-semibold">S/ {{ number_format($totalItem, 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                    <hr class="dashed-hr">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Subtotal:</strong>
+                                        <strong class="text-success">S/ {{ number_format($subtotal, 2) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Notas -->
+                            @if($reserva->notas)
+                            <div class="mb-3">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-comment-dots me-2 text-info"></i>Notas especiales
+                                </h5>
+                                <div class="ps-3">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-quote-left me-2"></i>
+                                        {{ $reserva->notas }}
+                                        <i class="fas fa-quote-right ms-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                        </div>
+
+                        <!-- Columna Derecha: QR Code -->
+                        <div class="col-md-5">
+                            <div class="qr-container text-center sticky-qr">
+                                <div class="qr-wrapper p-4 bg-light rounded">
+                                    <h5 class="mb-3 fw-bold">Código QR</h5>
+                                    <div class="qr-code-box">
+                                        {!! QrCode::size(200)->generate($reserva->codigo_confirmacion) !!}
+                                    </div>
+                                    <p class="text-muted small mt-3 mb-0">
+                                        Presenta este código al llegar al restaurante
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="card shadow-sm border-0 mb-4 animate-slide-up-delay">
+                <div class="card-body p-4">
+                    <h5 class="mb-4 text-center fw-bold">
+                        <i class="fas fa-tools me-2"></i>Acciones Rápidas
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ route('reserva.pdf', $reserva->id) }}" 
+                               class="btn btn-outline-danger btn-lg w-100 btn-action">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                <span>Descargar PDF</span>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <form action="{{ route('reserva.reenviar-email', $reserva->id) }}" method="POST" class="d-inline w-100">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-primary btn-lg w-100 btn-action">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    <span>Reenviar Email</span>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ route('reserva.google-calendar', $reserva->id) }}" 
+                               target="_blank"
+                               class="btn btn-outline-success btn-lg w-100 btn-action">
+                                <i class="fab fa-google me-2"></i>
+                                <span>Agregar a Calendar</span>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <a href="{{ route('home') }}" 
+                               class="btn btn-outline-dark btn-lg w-100 btn-action">
+                                <i class="fas fa-home me-2"></i>
+                                <span>Volver al Inicio</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instrucciones Importantes -->
+            <div class="card shadow-sm border-warning border-2 animate-slide-up-delay-2">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información Importante
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="instruction-item">
+                        <div class="instruction-icon bg-primary">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <div class="instruction-text">
+                            <strong>Confirmación por Email</strong>
+                            <p class="mb-0 text-muted">Te enviamos un correo con todos los detalles de tu reserva a <strong>{{ $reserva->email }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="instruction-item">
+                        <div class="instruction-icon bg-success">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="instruction-text">
+                            <strong>Código QR</strong>
+                            <p class="mb-0 text-muted">Presenta este código QR o tu código de confirmación al llegar al restaurante</p>
+                        </div>
+                    </div>
+
+                    <div class="instruction-item">
+                        <div class="instruction-icon bg-info">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="instruction-text">
+                            <strong>Tiempo de Llegada</strong>
+                            <p class="mb-0 text-muted">Por favor llega 10 minutos antes de tu hora reservada. Te esperamos hasta 15 minutos después</p>
+                        </div>
+                    </div>
+
+                    <div class="instruction-item mb-0">
+                        <div class="instruction-icon bg-danger">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="instruction-text">
+                            <strong>Política de Cancelación</strong>
+                            <p class="mb-0 text-muted">Puedes cancelar o modificar tu reserva hasta 2 horas antes sin costo alguno</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compartir en Redes -->
+            <div class="text-center mt-4 animate-fade-in-delay-3">
+                <p class="text-muted mb-3">Comparte tu experiencia:</p>
+                <div class="social-share">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}" 
+                       target="_blank" 
+                       class="btn btn-outline-primary btn-sm rounded-circle me-2">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?text=¡Acabo de hacer mi reserva!" 
+                       target="_blank" 
+                       class="btn btn-outline-info btn-sm rounded-circle me-2">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text=¡Mira mi reserva!" 
+                       target="_blank" 
+                       class="btn btn-outline-success btn-sm rounded-circle">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Canvas para Confeti -->
+<canvas id="confetti-canvas"></canvas>
 
 <script>
 // Efecto de Confeti
@@ -653,6 +666,8 @@ document.querySelector('.code-display')?.addEventListener('click', function() {
 });
 </script>
 
-<!-- SimplePHP QrCode (agrega esto a tu composer.json) -->
-{{-- composer require simplesoftwareio/simple-qrcode --}}
-@endsection
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
