@@ -57,25 +57,25 @@
     <div class="container">
         <h2>Notificación de Pago Fallido</h2>
 
-        <p>Estimado/a usuario/a,</p>
+        <p>Estimado/a {{ $reserva->nombre_cliente }},</p>
 
-        <p>Lamentamos informarle que el pago que intentó realizar no ha sido validado correctamente en nuestro sistema.
-        </p>
+        <p>Lamentamos informarle que el pago asociado a su reserva no ha sido validado correctamente en nuestro sistema.</p>
 
         <div class="detalle">
-            <p><strong>Número de pago:</strong> {{ $pago->id_pago }}</p>
-            <p><strong>Tipo de acta:</strong> {{ strtoupper(str_replace('_', ' ', $pago->tipo_acta)) }}</p>
-            <p><strong>Correo registrado:</strong> {{ $pago->Correo }}</p>
+            <p><strong>Reserva:</strong> #{{ $reserva->id }}</p>
+            <p><strong>Fecha:</strong> {{ $reserva->fecha_formateada }}</p>
+            <p><strong>Hora:</strong> {{ $reserva->hora_formateada }}</p>
+            <p><strong>Mesa:</strong> {{ optional($reserva->mesa)->numero ?? 'Sin asignar' }}</p>
+            <p><strong>Correo registrado:</strong> {{ $reserva->email ?? 'No registrado' }}</p>
         </div>
 
-        <p>Esto puede deberse a un error en el procesamiento o a una validación fallida. Le recomendamos verificar su
-            comprobante de pago o contactar con nuestras oficinas para mayor información.</p>
+        <p>Esto puede deberse a un error en el procesamiento o a una validación fallida. Le recomendamos verificar su comprobante de pago o contactar con nosotros para mayor información.</p>
 
-        <p>Una vez regularizado el pago, podrá acceder al documento oficial correspondiente al trámite solicitado.</p>
+        <p>Si desea reintentar el pago o necesita asistencia, por favor comuníquese con el restaurante.</p>
 
         <div class="firma">
             <p>Atentamente,</p>
-            <p><strong>Registro Civil</strong><br>Municipalidad / Entidad correspondiente</p>
+            <p><strong>Restaurante</strong></p>
         </div>
 
         <div class="footer">

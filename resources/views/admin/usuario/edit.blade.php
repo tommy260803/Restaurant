@@ -35,7 +35,7 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label for="email_mi_acta">Email Mi Acta</label>
+                        <label for="email_mi_acta">Email Principal</label>
                         <input type="email" class="form-control @error('email_mi_acta') is-invalid @enderror"
                             name="email_mi_acta" id="email_mi_acta"
                             value="{{ old('email_mi_acta', $usuario->email_mi_acta) }}">
@@ -56,8 +56,13 @@
 
                     <div class="form-group mb-4">
                         <label for="rol">Rol</label>
-                        <input type="text" class="form-control @error('rol') is-invalid @enderror" name="rol"
-                            id="rol" value="{{ old('rol', $usuario->rol) }}">
+                        <select name="rol" id="rol" class="form-select @error('rol') is-invalid @enderror" required>
+                            <option value="">Seleccione un rol</option>
+                            <option value="administrador" {{ old('rol', $usuario->getRoleNames()->first()) == 'administrador' ? 'selected' : '' }}>Administrador</option>
+                            <option value="cocinero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cocinero' ? 'selected' : '' }}>Cocinero</option>
+                            <option value="almacenero" {{ old('rol', $usuario->getRoleNames()->first()) == 'almacenero' ? 'selected' : '' }}>Almacenero</option>
+                            <option value="cajero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cajero' ? 'selected' : '' }}>Cajero</option>
+                        </select>
                         @error('rol')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

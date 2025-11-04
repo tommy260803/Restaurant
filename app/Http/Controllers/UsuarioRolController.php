@@ -5,17 +5,89 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\{Usuario, Persona, Administrador, Registrador, Region, Provincia, Distrito};
-use Illuminate\Support\Facades\{Storage, Hash};
+use Illuminate\Support\Facades\{Storage, Hash, Auth};
 
 class UsuarioRolController extends Controller
 {
     const PAGINATION = 10;
 
+    // ========================================
+    // MÉTODOS DE AUTENTICACIÓN
+    // ========================================
+    
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email_mi_acta' => 'required|email',
+            'contrasena' => 'required'
+        ], [
+            'email_mi_acta.required' => 'El correo electrónico es obligatorio.',
+            'email_mi_acta.email' => 'Debe ingresar un correo válido.',
+            'contrasena.required' => 'La contraseña es obligatoria.',
+        ]);
+
+        // Intentar autenticación con las credenciales personalizadas
+        $usuario = Usuario::where('email_mi_acta', $request->email_mi_acta)
+            ->where('estado', '1')
+            ->first();
+
+        if ($usuario && Hash::check($request->contrasena, $usuario->contrasena)) {
+            Auth::login($usuario, $request->filled('remember'));
+            $request->session()->regenerate();
+            
+            // Verificar si el usuario tiene roles asignados
+            if ($usuario->roles->isEmpty()) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email_mi_acta' => 'Este usuario no tiene un rol asignado.',
+                ])->onlyInput('email_mi_acta');
+            }
+
+            // Obtener el primer rol del usuario
+            $role = $usuario->roles->first();
+            
+            // Redirigir según el rol
+            return match($role->name) {
+                'administrador' => redirect()->route('admin.dashboard')
+                    ->with('success', '¡Bienvenido Administrador!'),
+                    
+                'cocinero' => redirect()->route('cocina.dashboard')
+                    ->with('success', '¡Bienvenido a la Cocina!'),
+                    
+                'almacenero' => redirect()->route('almacen.dashboard')
+                    ->with('success', '¡Bienvenido al Almacén!'),
+                    
+                'cajero' => redirect()->route('caja.dashboard')
+                    ->with('success', '¡Bienvenido a Caja!'),
+                    
+                default => redirect()->route('home')
+                    ->with('success', '¡Bienvenido!')
+            };
+        }
+
+        return back()->withErrors([
+            'email_mi_acta' => 'Las credenciales no coinciden con nuestros registros.',
+        ])->onlyInput('email_mi_acta');
+    }
+
+    // ========================================
+    // GESTIÓN DE USUARIOS
+    // ========================================
+
     public function index(Request $request)
     {
         $buscarpor = $request->get('buscarpor');
-        $usuarios = Usuario::where('estado', '1')
-            ->where('nombre_usuario', 'like', "%{$buscarpor}%")
+        $usuarios = Usuario::with('roles')
+            ->where('estado', '1')
+            ->when($buscarpor, function($query) use ($buscarpor) {
+                return $query->where('nombre_usuario', 'like', "%{$buscarpor}%");
+            })
+            ->orderBy('id_usuario', 'desc')
             ->paginate(self::PAGINATION);
 
         return view('admin.usuario.index', compact('usuarios', 'buscarpor'));
@@ -34,15 +106,15 @@ class UsuarioRolController extends Controller
     public function store(Request $request)
 {
     $request->validate([
-        'dni_usuario' => 'required|exists:personas,dni|unique:usuarios,dni_usuario',
+        'dni_usuario' => 'required|exists:persona,dni|unique:usuarios,dni_usuario',
         'nombre_usuario' => 'required|max:30|unique:usuarios,nombre_usuario',
         'contrasena' => 'required|min:6',
         'email_mi_acta' => 'required|email|unique:usuarios,email_mi_acta',
         'email_respaldo' => 'nullable|email',
-        'rol' => 'required|in:Administrador,Registrador',
+        'rol' => 'required|in:administrador,cocinero,almacenero,cajero',
     ], [
         'dni_usuario.required' => 'Debe seleccionar un DNI válido.',
-        'dni_usuario.exists' => 'El DNI no está registrado en la tabla personas.',
+        'dni_usuario.exists' => 'El DNI no está registrado en la tabla persona.',
         'dni_usuario.unique' => 'Ya existe un usuario con este DNI.',
         'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
         'nombre_usuario.unique' => 'Este nombre de usuario ya está en uso.',
@@ -60,27 +132,11 @@ class UsuarioRolController extends Controller
         'contrasena' => bcrypt($request->contrasena),
         'email_mi_acta' => $request->email_mi_acta,
         'email_respaldo' => $request->email_respaldo,
-        'rol' => $request->rol,
         'estado' => '1',
     ]);
 
-    // Asignar rol usando Spatie (si estás usando Spatie\Permission)
-    if (method_exists($usuario, 'assignRole')) {
-        $usuario->assignRole($request->rol);
-    }
-
-    // Crear registro asociado en tabla de roles específicos
-    if ($request->rol === 'Administrador') {
-        \App\Models\Administrador::create([
-            'id_usuario' => $usuario->id_usuario,
-            'estado' => '1',
-        ]);
-    } elseif ($request->rol === 'Registrador') {
-        \App\Models\Registrador::create([
-            'id_usuario' => $usuario->id_usuario,
-            'estado' => '1',
-        ]);
-    }
+    // Asignar rol usando Spatie
+    $usuario->assignRole($request->rol);
 
     return redirect()->route('usuarios.index')
                      ->with('datos', '✅ Usuario registrado correctamente.');
@@ -113,19 +169,18 @@ class UsuarioRolController extends Controller
             'nombre_usuario' => 'required|max:30|unique:usuarios,nombre_usuario,' . $id . ',id_usuario',
             'email_mi_acta' => 'required|email|unique:usuarios,email_mi_acta,' . $id . ',id_usuario',
             'email_respaldo' => 'nullable|email',
-            'rol' => 'required|in:Administrador,Registrador',
+            'rol' => 'required|in:administrador,cocinero,almacenero,cajero',
             'contrasena' => 'nullable|min:6', // Opcional en edición
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'portada' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
         ]);
 
-        $rolAnterior = $usuario->rol;
+        $rolAnterior = $usuario->roles->first()?->name;
         
         // Actualizar campos básicos
         $usuario->nombre_usuario = $request->nombre_usuario;
         $usuario->email_mi_acta = $request->email_mi_acta;
         $usuario->email_respaldo = $request->email_respaldo;
-        $usuario->rol = $request->rol;
 
         // Solo actualizar contraseña si se proporciona
         if ($request->filled('contrasena')) {
@@ -162,24 +217,10 @@ class UsuarioRolController extends Controller
 
         $usuario->save();
 
-        // Actualizar roles si cambió
+        // Actualizar roles de Spatie si cambió
         if ($rolAnterior !== $request->rol) {
-            // Desactivar roles anteriores
-            Administrador::where('id_usuario', $usuario->id_usuario)->update(['estado' => '0']);
-            Registrador::where('id_usuario', $usuario->id_usuario)->update(['estado' => '0']);
-
-            // Activar nuevo rol
-            if ($request->rol === 'Administrador') {
-                Administrador::updateOrCreate(
-                    ['id_usuario' => $usuario->id_usuario], 
-                    ['estado' => '1']
-                );
-            } elseif ($request->rol === 'Registrador') {
-                Registrador::updateOrCreate(
-                    ['id_usuario' => $usuario->id_usuario], 
-                    ['estado' => '1']
-                );
-            }
+            // Remover roles anteriores y asignar el nuevo
+            $usuario->syncRoles([$request->rol]);
         }
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
@@ -251,7 +292,10 @@ class UsuarioRolController extends Controller
 
     public function logout(Request $request)
     {
-        $request->session()->flush();
-        return redirect('/login');
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        return redirect()->route('login')->with('success', 'Sesión cerrada correctamente');
     }
 }

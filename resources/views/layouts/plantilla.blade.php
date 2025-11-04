@@ -203,7 +203,7 @@
                         </li>
                         <hr>
                         <!-- USUARIOS -->
-                        @role('Administrador')
+                        @role('administrador')
                             <li class="custom-nav-item custom-dropdown-container">
                                 <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
                                     <span>Usuarios</span>
@@ -224,7 +224,7 @@
                             </li>
                         @endrole
 
-                        @role('Administrador|Registrador')
+                        @role('administrador')
                             <li class="custom-nav-item custom-dropdown-container">
                                 <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
                                     <span>Personas</span>
@@ -247,7 +247,7 @@
                                 </ul>
                             </li>
                         @endrole
-                        {{-- @role('Administrador')
+                        @role('administrador')
                             <li class="custom-nav-item custom-dropdown-container">
                                 <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
                                     <span>Alcaldes</span>
@@ -266,12 +266,12 @@
                                     </li>
                                 </ul>
                             </li>
-                        @endrole --}}
+                        @endrole 
                     </ul>
                 </li>
 
                 <!-- ROLES Y PERMISOS -->
-                @role('Administrador')
+                @role('administrador')
                     <li class="custom-nav-item custom-dropdown-container">
                         <a href="#" class="custom-nav-link custom-dropdown-toggle primario">
                             <i class='bx bx-user-minus' style="font-size: 35px;"></i>
@@ -391,12 +391,21 @@
                                         <div class="fw-semibold">{{ $usuario->nombre_usuario }}</div>
                                         <div class="text-muted small">{{ $usuario->email_mi_acta }}</div>
                                         <div class="mt-1">
-                                            @role('Administrador')
-                                                <span class="badge bg-primary">Administrador</span>
-                                            @endrole
-                                            @role('Registrador')
-                                                <span class="badge bg-success">Registrador</span>
-                                            @endrole
+                                            @if($usuario->roles->isNotEmpty())
+                                                @foreach($usuario->roles as $role)
+                                                    <span class="badge 
+                                                        @if($role->name == 'administrador') bg-danger
+                                                        @elseif($role->name == 'cocinero') bg-warning
+                                                        @elseif($role->name == 'almacenero') bg-info
+                                                        @elseif($role->name == 'cajero') bg-success
+                                                        @else bg-secondary
+                                                        @endif">
+                                                        {{ ucfirst($role->name) }}
+                                                    </span>
+                                                @endforeach
+                                            @else
+                                                <span class="badge bg-secondary">Sin rol</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -485,5 +494,6 @@
 
     @stack('scripts')
 </body>
+
 
 </html>

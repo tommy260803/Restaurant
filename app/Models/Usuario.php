@@ -22,7 +22,6 @@ class Usuario extends Authenticatable
         'contrasena',
         'email_mi_acta',
         'email_respaldo',
-        'rol',
         'estado',
         'foto',
         'portada',

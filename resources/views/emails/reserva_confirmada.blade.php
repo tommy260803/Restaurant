@@ -54,27 +54,38 @@
 
 <body>
     <div class="container">
-        <h2>Confirmación de Pago Exitoso</h2>
+        <h2>Confirmación de Reserva</h2>
 
-        <p>Estimado/a usuario/a,</p>
+        <p>Estimado/a {{ $reserva->nombre_cliente }},</p>
 
-        <p>Le informamos que su pago ha sido validado correctamente y el trámite correspondiente a su acta ha sido
-            registrado en nuestro sistema.</p>
+        <p>Le confirmamos que su reserva ha sido registrada correctamente en nuestro sistema. A continuación los
+            detalles de su reserva:</p>
 
         <div class="resaltado">
-            <p><strong>Número de pago:</strong> {{ $pago->id_pago }}</p>
-            <p><strong>Tipo de acta:</strong> {{ strtoupper(str_replace('_', ' ', $pago->tipo_acta)) }}</p>
-            <p><strong>Correo registrado:</strong> {{ $pago->Correo }}</p>
+            <p><strong>Nombre:</strong> {{ $reserva->nombre_cliente }}</p>
+            <p><strong>Fecha:</strong> {{ $reserva->fecha_formateada }}</p>
+            <p><strong>Hora:</strong> {{ $reserva->hora_formateada }}</p>
+            <p><strong>Mesa:</strong> {{ optional($reserva->mesa)->numero ?? 'Sin asignar' }}</p>
+            <p><strong>Personas:</strong> {{ $reserva->numero_personas }}</p>
         </div>
 
-        <p>En este correo encontrará adjunto el archivo PDF generado con la información del acta correspondiente.</p>
+        @if($reserva->tienePlatosPedidos())
+            <div>
+                <h4>Platos pre-ordenados</h4>
+                <ul>
+                    @foreach($reserva->platos as $plato)
+                        <li>{{ $plato->nombre }} — {{ $plato->pivot->cantidad }} x S/ {{ number_format($plato->pivot->precio,2) }}</li>
+                    @endforeach
+                </ul>
+                <p><strong>Subtotal platos:</strong> S/ {{ number_format($reserva->subtotal_platos,2) }}</p>
+            </div>
+        @endif
 
-        <p>Por favor, conserve este documento para cualquier trámite futuro. Si tiene alguna consulta o necesita
-            asistencia adicional, no dude en comunicarse con nuestra oficina.</p>
+        <p>Si necesita modificar o cancelar su reserva, por favor contáctenos o utilice la sección de reservas en nuestro sitio.</p>
 
         <div class="firma">
             <p>Atentamente,</p>
-            <p><strong>Registro Civil</strong><br>Municipalidad / Entidad correspondiente</p>
+            <p><strong>Restaurante</strong></p>
         </div>
 
         <div class="footer">

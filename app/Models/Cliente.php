@@ -34,4 +34,9 @@ class Cliente extends Model
     {
         return self::all();
     }
+    // Relación con reservas
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'idCliente', 'idCliente');
+    }
 }

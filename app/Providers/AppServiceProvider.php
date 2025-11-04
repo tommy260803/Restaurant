@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Pagination\Paginator;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -16,9 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(NotificacionService::class, function ($app) {
-        return new NotificacionService();
-        });
+        // $this->app->bind(NotificacionService::class, function ($app) {
+        // return new NotificacionService();
+        // });
     }
 
     /**
@@ -27,6 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
-        
+        Paginator::useBootstrapFive();
     }
 }

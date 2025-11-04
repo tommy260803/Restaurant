@@ -21,7 +21,7 @@
                 <div class="login__box">
                     <input class="login__input" type="text" id="email" name="email_mi_acta"
                         placeholder=" " value="{{ old('email_mi_acta') }}">
-                    <label for="email" class="login__label">Correo MiActa</label>
+                    <label for="email" class="login__label">Correo Electrónico</label>
 
                     <i class="ri-mail-fill login__icon"></i>
                 </div>

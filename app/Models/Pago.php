@@ -7,18 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class Pago extends Model
 {
     protected $table = 'pagos';
-    protected $primaryKey = 'id_pago';
+    // La tabla usa 'id' como PK
+    protected $primaryKey = 'id';
     public $timestamps = false;
 
+    // Columnas reales en la tabla: id, venta_id, reserva_id, metodo, numero_operacion, monto, fecha, estado
     protected $fillable = [
-        'DNI', 
-        'Correo',
-        'monto', 
-        'tipo_acta', 
-        'id_acta',        
+        'venta_id',
+        'reserva_id',
+        'metodo',
+        'numero_operacion',
+        'monto',
+        'fecha',
         'estado',
-        'metodo_pago', 
-        'num_transaccion', 
-        'fecha_pago',
     ];
+
+    // Relación con reserva (si aplica)
+    public function reserva()
+    {
+        return $this->belongsTo(Reserva::class, 'reserva_id', 'id');
+    }
 }

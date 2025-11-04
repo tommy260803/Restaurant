@@ -18,7 +18,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Nombre de Usuario</th>
-                                <th>Email Mi Acta</th>
+                                <th>Email Restaurante</th>
                                 <th>Email de Respaldo</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
@@ -32,7 +32,23 @@
                                     <td>{{ $usuario->nombre_usuario }}</td>
                                     <td>{{ $usuario->email_mi_acta }}</td>
                                     <td>{{ $usuario->email_respaldo ?? 'No especificado' }}</td>
-                                    <td>{{ $usuario->rol ?? 'No asignado' }}</td>
+                                    <td>
+                                        @if($usuario->roles->isNotEmpty())
+                                            @foreach($usuario->roles as $role)
+                                                <span class="badge 
+                                                    @if($role->name == 'administrador') bg-danger
+                                                    @elseif($role->name == 'cocinero') bg-warning
+                                                    @elseif($role->name == 'almacenero') bg-info
+                                                    @elseif($role->name == 'cajero') bg-success
+                                                    @else bg-secondary
+                                                    @endif">
+                                                    {{ ucfirst($role->name) }}
+                                                </span>
+                                            @endforeach
+                                        @else
+                                            <span class="badge bg-secondary">Sin rol</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($usuario->estado == '1')
                                             <span class="badge bg-success">Activo</span>
@@ -60,6 +76,11 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Paginación -->
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $usuarios->links() }}
+                </div>
             </div>
         </div>
     </div>
@@ -73,6 +94,16 @@
             Swal.fire({
                 title: "Éxito",
                 text: "{{ session('success') }}",
+                icon: "success"
+            });
+        </script>
+    @endif
+
+    @if (session('datos'))
+        <script>
+            Swal.fire({
+                title: "Éxito",
+                text: "{{ session('datos') }}",
                 icon: "success"
             });
         </script>

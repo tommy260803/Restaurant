@@ -61,8 +61,10 @@
                                 </label>
                                 <select name="rol" class="form-select @error('rol') is-invalid @enderror" required>
                                     <option value="">Seleccione un rol</option>
-                                    <option value="Administrador" {{ old('rol') == 'Administrador' ? 'selected' : '' }}>Administrador</option>
-                                    <option value="Registrador" {{ old('rol') == 'Registrador' ? 'selected' : '' }}>Registrador</option>
+                                    <option value="administrador" {{ old('rol') == 'administrador' ? 'selected' : '' }}>Administrador</option>
+                                    <option value="cocinero" {{ old('rol') == 'cocinero' ? 'selected' : '' }}>Cocinero</option>
+                                    <option value="almacenero" {{ old('rol') == 'almacenero' ? 'selected' : '' }}>Almacenero</option>
+                                    <option value="cajero" {{ old('rol') == 'cajero' ? 'selected' : '' }}>Cajero</option>
                                 </select>
                                 @error('rol')
                                     <div class="invalid-feedback">{{ $message }}</div>

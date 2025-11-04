@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap');
 
 
-/* Navbar */
+/* Navbar estilo restaurante cálido */
 .navbar-custom {
-    background: linear-gradient(to right, #1e3a8a, #3730a3);
+    background: linear-gradient(to right, #5a3f2a, #6b4f35);
     min-height: 64px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 15px rgba(255, 185, 120, 0.3);
+    border-bottom: 1px solid rgba(255, 190, 120, 0.25);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -23,7 +24,7 @@
     right: 0;
     width: 8px;
     height: 8px;
-    background: #FF5252;
+    background: #FF6B35;
     border-radius: 50%;
 }
 
@@ -34,7 +35,8 @@
     z-index: 10;
     width: 270px;
     height: 100vh;
-    background: #151A2D;
+    background: linear-gradient(180deg, #3d2b1f, #2a1f16);
+    border-right: 1px solid rgba(255, 190, 120, 0.2);
     transition: all 0.4s ease;
 }
 
@@ -46,7 +48,7 @@
     align-items: center;
     justify-items: center;
     border-radius: 50%;
-    border: 1px solid #ffffff;
+    border: 2px solid rgba(255, 200, 130, 0.5);
 }
 
 .container-logo {
@@ -71,11 +73,11 @@
     right: 20px;
     height: 35px;
     width: 35px;
-    color: #151A2D;
+    color: #2a1f16;
     border: none;
     cursor: pointer;
     display: flex;
-    background: #EEF2FF;
+    background: rgba(255, 200, 130, 0.3);
     align-items: center;
     justify-content: center;
     border-radius: 8px;
@@ -109,7 +111,7 @@
 }
 
 .custom-sidebar-header .custom-sidebar-toggler:hover {
-    background: #d9e1fd;
+    background: rgba(255, 200, 130, 0.5);
 }
 
 .custom-sidebar-nav .custom-nav-list {
@@ -131,7 +133,7 @@
 }
 
 .custom-sidebar .custom-sidebar-nav .custom-primary-nav:hover {
-    scrollbar-color: #EEF2FF transparent;
+    scrollbar-color: rgba(255, 200, 130, 0.4) transparent;
 }
 
 .custom-sidebar.collapsed .custom-sidebar-nav .custom-primary-nav {
@@ -139,7 +141,7 @@
 }
 
 .custom-sidebar-nav .custom-nav-item .custom-nav-link {
-    color: #fff;
+    color: #f6e7d3;
     display: flex;
     gap: 10px;
     white-space: nowrap;
@@ -147,13 +149,14 @@
     padding: 11px 11px;
     align-items: center;
     text-decoration: none;
-    border: 1px solid #151A2D;
+    border: 1px solid transparent;
     transition: 0.4s ease;
 }
 
 .custom-sidebar-nav .custom-nav-item:is(:hover, .open)>.custom-nav-link:not(.custom-dropdown-title) {
-    color: #151A2D;
-    background: #EEF2FF;
+    color: #fef0d6;
+    background: rgba(255, 200, 130, 0.25);
+    border: 1px solid rgba(255, 200, 130, 0.4);
 }
 
 .custom-sidebar .custom-nav-link .custom-nav-label {
@@ -176,7 +179,7 @@
 
 .custom-sidebar-nav .custom-secondary-nav {
     bottom: 35px;
-    background: #151A2D;
+    background: linear-gradient(135deg, #3d2b1f, #2a1f16);
 }
 
 .custom-sidebar-nav .custom-nav-item {
@@ -186,6 +189,7 @@
 /* Dropdown Stylings */
 .custom-sidebar-nav .custom-dropdown-container .custom-dropdown-icon {
     margin: 0 -4px 0 auto;
+    color: #f9d69b;
     transition: transform 0.4s ease, opacity 0.3s 0.2s ease;
 }
 
@@ -194,6 +198,7 @@
 }
 
 .custom-dropdown-container > .custom-nav-link .custom-dropdown-icon2 {
+    color: #f9d69b;
     transition: transform 0.4s ease;
 }
 
@@ -219,7 +224,8 @@
     overflow-y: unset;
     pointer-events: none;
     border-radius: 10px 10px;
-    background: #151A2D;
+    background: linear-gradient(135deg, #3d2b1f, #2a1f16);
+    border: 1px solid rgba(255, 200, 130, 0.4);
     transition: 0s;
 }
 
@@ -240,7 +246,7 @@
 
 .custom-dropdown-menu .custom-nav-item .custom-nav-link.custom-dropdown-title {
     display: none;
-    color: #fff;
+    color: #f6e7d3;
     padding: 9px 15px;
 }
 
@@ -256,9 +262,9 @@
 .collapsed hr {
     display: block;
     border: none;
-    height: 2px ;
-    background-color: #ffff;
-    margin: 0;
+    height: 2px;
+    background: rgba(255, 200, 130, 0.3);
+    margin: 5px 7px;
 }
 
 hr {
@@ -274,8 +280,8 @@ hr {
         height: 40px;
         width: 42px;
         display: flex;
-        color: #F1F4FF;
-        background: #151A2D;
+        color: #f6e7d3;
+        background: linear-gradient(135deg, #3d2b1f, #2a1f16);
     }
 
     .custom-main-content {
@@ -326,7 +332,7 @@ hr {
 .line {
     fill: none;
     transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
-    stroke: white;
+    stroke: #f9d69b;
     stroke-width: 5.5;
     stroke-linecap: round;
 }
