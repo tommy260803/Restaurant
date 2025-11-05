@@ -135,6 +135,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/caja/pagos/{id}/estado', [PagoController::class, 'actualizarEstado'])->name('caja.pagos.actualizar-estado');
     });
 
+    // ==============================
+    // COCINERO (Cocinero/Admin)
+    Route::prefix('cocinero')->name('cocinero.')->middleware(['role:cocinero|administrador'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\CocineroController::class, 'index'])->name('index');
+        Route::get('/pedidos', [\App\Http\Controllers\CocineroController::class, 'pedidosPendientes'])->name('pedidos');
+        Route::get('/pedidos/{id}', [\App\Http\Controllers\CocineroController::class, 'detalle'])->name('pedidos.detalle');
+        Route::post('/pedidos/{id}/preparar', [\App\Http\Controllers\CocineroController::class, 'marcarPreparacion'])->name('pedidos.preparar');
+        Route::post('/pedidos/{id}/finalizar', [\App\Http\Controllers\CocineroController::class, 'marcarPreparado'])->name('pedidos.finalizar');
+        Route::post('/pedidos/{id}/incidencia', [\App\Http\Controllers\CocineroController::class, 'registrarIncidencia'])->name('pedidos.incidencia');
+        Route::get('/historial', [\App\Http\Controllers\CocineroController::class, 'historial'])->name('historial');
+        // JSON (auto-actualización)
+        Route::get('/api/stats', [\App\Http\Controllers\CocineroController::class, 'stats'])->name('api.stats');
+        Route::get('/api/pedidos/{id}', [\App\Http\Controllers\CocineroController::class, 'detalleJson'])->name('api.pedido');
+        Route::get('/api/pendientes', [\App\Http\Controllers\CocineroController::class, 'pendientesRecientes'])->name('api.pendientes');
+    });
+
     // ========================================
     // PERFIL (accesible para todos los autenticados)
 

@@ -313,6 +313,8 @@
                         </ul>
                     </li>
 
+                    
+
                     <!-- NOTIFICACIONES -->
                     <li class="custom-nav-item custom-dropdown-container">
                         {{-- <a href="{{ route('notificaciones.index') }}"
@@ -323,6 +325,24 @@
                     </a> --}}
                     </li>
                 @endrole
+
+                {{-- COCINA (visible para administrador y cocinero) --}}
+                @hasanyrole('administrador|cocinero')
+                <li class="custom-nav-item custom-dropdown-container">
+                    <a href="#" class="custom-nav-link custom-dropdown-toggle primario">
+                        <i class='bx bx-restaurant' style="font-size: 30px;"></i>
+                        <span class="custom-nav-label">Cocina</span>
+                        <i class='bx bx-chevron-down custom-dropdown-icon'></i>
+                    </a>
+                    <ul class="custom-dropdown-menu">
+                        <li class="custom-nav-item"><a class="custom-nav-link custom-dropdown-title">Cocina</a></li>
+                        <hr>
+                        <li class="custom-nav-item"><a href="{{ route('cocinero.index') }}" class="custom-nav-link">Dashboard</a></li>
+                        <li class="custom-nav-item"><a href="{{ route('cocinero.pedidos') }}" class="custom-nav-link">Pedidos</a></li>
+                        <li class="custom-nav-item"><a href="{{ route('cocinero.historial') }}" class="custom-nav-link">Historial</a></li>
+                    </ul>
+                </li>
+                @endhasanyrole
             </ul>
 
             <!-- ACERCA DE -->
