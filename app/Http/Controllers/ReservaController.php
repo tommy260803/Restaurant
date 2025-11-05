@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservaConfirmada;
 use App\Mail\ReservaCancelada;
+use App\Mail\ReservaEnRevision;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 
@@ -99,16 +100,12 @@ class ReservaController extends Controller
             $pagoCreado = false;
         }
 
-        // Enviar correo según resultado del pago (si hay email registrado)
+        // Enviar correo "en revisión" (si hay email registrado). La confirmación se enviará al confirmar el pago.
         if ($reserva->email) {
             try {
-                if ($pagoCreado) {
-                    Mail::to($reserva->email)->send(new ReservaConfirmada($reserva));
-                } else {
-                    Mail::to($reserva->email)->send(new ReservaCancelada($reserva));
-                }
+                Mail::to($reserva->email)->send(new ReservaEnRevision($reserva));
             } catch (\Exception $e) {
-                Log::warning('No se pudo enviar correo para reserva ' . $reserva->id . ': ' . $e->getMessage());
+                Log::warning('No se pudo enviar correo (en revisión) para reserva ' . $reserva->id . ': ' . $e->getMessage());
             }
         }
 
@@ -223,13 +220,49 @@ class ReservaController extends Controller
     }
 
     // Ver reservas (para cajero/admin)
-    public function index()
+    public function index(Request $request)
     {
-        $reservasHoy = Reserva::hoy()->orderBy('hora_reserva')->get();
-        $reservasProximas = Reserva::proximas()->get();
-        $mesasDisponibles = Mesa::disponibles()->get();
+        $estado = $request->input('estado');
+        $buscar = $request->input('q');
+        $fecha = $request->input('fecha');
 
-        return view('reservas.index', compact('reservasHoy', 'reservasProximas', 'mesasDisponibles'));
+        // Hoy
+        $hoyQuery = Reserva::query()->whereDate('fecha_reserva', Carbon::today());
+        if (!empty($estado)) {
+            $hoyQuery->where('estado', $estado);
+        }
+        if (!empty($buscar)) {
+            $hoyQuery->where(function($q) use ($buscar) {
+                $q->where('nombre_cliente', 'like', "%$buscar%")
+                  ->orWhere('telefono', 'like', "%$buscar%")
+                  ->orWhere('id', $buscar);
+            });
+        }
+        $reservasHoy = $hoyQuery->orderBy('hora_reserva')->get();
+
+        // Próximas (o por fecha específica si se envía)
+        $proxQuery = Reserva::query();
+        if (!empty($fecha)) {
+            $proxQuery->whereDate('fecha_reserva', $fecha);
+        } else {
+            $proxQuery->whereDate('fecha_reserva', '>', Carbon::today());
+        }
+        if (!empty($estado)) {
+            $proxQuery->where('estado', $estado);
+        }
+        if (!empty($buscar)) {
+            $proxQuery->where(function($q) use ($buscar) {
+                $q->where('nombre_cliente', 'like', "%$buscar%")
+                  ->orWhere('telefono', 'like', "%$buscar%")
+                  ->orWhere('id', $buscar);
+            });
+        }
+        $reservasProximas = $proxQuery->orderBy('fecha_reserva')->orderBy('hora_reserva')->get();
+
+        // Mesas disponibles para asignación
+        $mesasDisponibles = Mesa::query()->where('estado', 'disponible')->orderBy('numero')->get();
+
+        return view('reservas.index', compact('reservasHoy', 'reservasProximas', 'mesasDisponibles', 'estado', 'buscar', 'fecha'));
     }
 
     // Confirmar reserva
@@ -281,5 +314,51 @@ class ReservaController extends Controller
         $reserva->update(['estado' => 'completada']);
 
         return redirect()->back()->with('success', 'Cliente llegó, reserva completada');
+    }
+
+    // Formulario público: Consultar mi reserva
+    public function consultarForm()
+    {
+        return view('reservas.consultar');
+    }
+
+    // Búsqueda pública de reserva por ID o código
+    public function consultarBuscar(Request $request)
+    {
+        $request->validate([
+            'codigo' => 'required|string'
+        ]);
+
+        $input = trim($request->codigo);
+        $id = null;
+
+        if (preg_match('/^R(\d{1,})$/i', $input, $m)) {
+            // Código del tipo R000123 -> extraer número
+            $id = ltrim($m[1], '0');
+        } elseif (ctype_digit($input)) {
+            $id = (int) $input;
+        }
+
+        if (!$id) {
+            return back()->with('error', 'Código o ID inválido')->withInput();
+        }
+
+        $reserva = Reserva::with(['mesa', 'platos'])->find($id);
+        if (!$reserva) {
+            return back()->with('error', 'No se encontró la reserva')->withInput();
+        }
+
+        // Asegurar alias esperados en vistas
+        $reserva->nombre = $reserva->nombre_cliente;
+        $reserva->fecha = $reserva->fecha_reserva;
+        $reserva->hora = $reserva->hora_reserva;
+        $reserva->personas = $reserva->numero_personas;
+        $reserva->notas = $reserva->comentarios;
+        $reserva->pedidos = $reserva->platos;
+        if (empty($reserva->codigo_confirmacion)) {
+            $reserva->codigo_confirmacion = 'R' . str_pad($reserva->id, 6, '0', STR_PAD_LEFT);
+        }
+
+        return view('reservas.consultar_resultado', compact('reserva'));
     }
 }

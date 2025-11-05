@@ -53,7 +53,13 @@ Route::get('/reservas/{id}/confirmacion', [ReservaController::class, 'confirmaci
 // Acciones públicas relacionadas con una reserva: descargar comprobante, reenviar email, agregar a Calendar
 Route::get('/reserva/{id}/pdf', [ReservaController::class, 'pdf'])->name('reserva.pdf');
 Route::post('/reserva/{id}/reenviar-email', [ReservaController::class, 'reenviarEmail'])->name('reserva.reenviar-email');
+// Fallback GET para evitar errores si se accede por enlace directo
+Route::get('/reserva/{id}/reenviar-email', [ReservaController::class, 'reenviarEmail']);
 Route::get('/reserva/{id}/google-calendar', [ReservaController::class, 'googleCalendar'])->name('reserva.google-calendar');
+
+// Consultar mi reserva (público)
+Route::get('/reservas/consultar', [ReservaController::class, 'consultarForm'])->name('reservas.consultar');
+Route::post('/reservas/consultar', [ReservaController::class, 'consultarBuscar'])->name('reservas.consultar.buscar');
 
 // Ruta temporal de debug
 Route::get('/test-roles', function() {
@@ -123,6 +129,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/completar', [ReservaController::class, 'completar'])->name('completar');
     });
 
+    // Pagos de Reservas (Cajero/Admin)
+    Route::middleware(['role:cajero|administrador'])->group(function () {
+        Route::get('/caja/pagos/reservas', [PagoController::class, 'reservasIndex'])->name('caja.pagos.reservas');
+        Route::post('/caja/pagos/{id}/estado', [PagoController::class, 'actualizarEstado'])->name('caja.pagos.actualizar-estado');
+    });
+
     // ========================================
     // PERFIL (accesible para todos los autenticados)
 
@@ -154,6 +166,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Alcalde
         Route::resource('alcalde', AlcaldeController::class);
+
+        // Mesas (administración)
+        Route::resource('mesas', App\Http\Controllers\MesasController::class)->only(['index','create','store','edit','update','destroy']);
+        Route::post('mesas/{mesa}/estado', [App\Http\Controllers\MesasController::class, 'cambiarEstado'])->name('mesas.cambiar-estado');
     });
     
     // ========================================

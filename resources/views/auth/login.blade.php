@@ -60,12 +60,19 @@
     </form>
 
     <p class="text-center text-sm text-gray-600 mt-6">
-        ¿Eres cliente? Haz tu reserva sin necesidad de crear una cuenta.<br>
-        <a href="{{ route('reservas.create') }}" 
-            class="inline-flex items-center justify-center gap-2 mt-3 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-lg max-w-xs mx-auto">
-            <i class="ri-calendar-check-line text-xl"></i>
-            Reservar Mesa
-        </a>
+        ¿Eres cliente? Haz tu reserva o consulta tu reserva sin necesidad de crear una cuenta.<br>
+        <div class="flex flex-col items-center gap-2 mt-3">
+            <a href="{{ route('reservas.create') }}" 
+                class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-lg max-w-xs">
+                <i class="ri-calendar-check-line text-xl"></i>
+                Reservar Mesa
+            </a>
+            <a href="{{ route('reservas.consultar') }}" 
+                class="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-700 font-bold rounded-xl hover:bg-yellow-50 transition-transform max-w-xs">
+                <i class="ri-search-eye-line text-xl"></i>
+                Consultar mi Reserva
+            </a>
+        </div>
     </p>
 </div>
 @endsection

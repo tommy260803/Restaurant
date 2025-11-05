@@ -50,13 +50,13 @@
 
                 <!-- MESAS -->
                 <li class="custom-nav-item">
-                    <a href="#" class="custom-nav-link">
+                    <a href="{{ route('mesas.index') }}" class="custom-nav-link">
                         <i class='bx bx-table' style="font-size: 30px;"></i>
                         <span class="custom-nav-label">Mesas</span>
                     </a>
                     <ul class="custom-dropdown-menu">
                         <li class="custom-nav-item">
-                            <a class="custom-nav-link custom-dropdown-title">Mesas</a>
+                            <a href="{{ route('mesas.index') }}" class="custom-nav-link custom-dropdown-title">Mesas</a>
                         </li>
                     </ul>
                 </li>
@@ -303,6 +303,7 @@
                         <ul class="custom-dropdown-menu">
                             <li class="custom-nav-item"><a class="custom-nav-link custom-dropdown-title">Pagos</a></li>
                             <hr>
+                            <li class="custom-nav-item"><a href="{{ route('caja.pagos.reservas') }}" class="custom-nav-link">Pagos de Reservas</a></li>
                             <li class="custom-nav-item"><a href="{{ route('pagos.index') }}"
                                     class="custom-nav-link">Lista de Pagos</a></li>
                             <li class="custom-nav-item"><a href="{{ route('tarifas.index') }}"

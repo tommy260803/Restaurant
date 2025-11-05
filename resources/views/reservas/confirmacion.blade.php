@@ -469,10 +469,10 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <a href="{{ route('home') }}" 
+                            <a href="{{ route('login') }}" 
                                class="btn btn-outline-dark btn-lg w-100 btn-action">
-                                <i class="fas fa-home me-2"></i>
-                                <span>Volver al Inicio</span>
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                <span>Ir a Iniciar Sesión</span>
                             </a>
                         </div>
                     </div>

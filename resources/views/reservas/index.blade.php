@@ -2,7 +2,7 @@
 
 @section('title', 'Gestión de Reservas')
 
-@section('content')
+@section('contenido')
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-calendar-event"></i> Gestión de Reservas</h1>
@@ -17,6 +17,31 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+
+    <!-- Filtros -->
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Buscar</label>
+            <input type="text" name="q" class="form-control" placeholder="Cliente, teléfono o ID" value="{{ $buscar ?? '' }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select">
+                <option value="">Todos</option>
+                <option value="pendiente" {{ ($estado ?? '')==='pendiente' ? 'selected' : '' }}>Pendiente</option>
+                <option value="confirmada" {{ ($estado ?? '')==='confirmada' ? 'selected' : '' }}>Confirmada</option>
+                <option value="completada" {{ ($estado ?? '')==='completada' ? 'selected' : '' }}>Completada</option>
+                <option value="cancelada" {{ ($estado ?? '')==='cancelada' ? 'selected' : '' }}>Cancelada</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Fecha (próximas)</label>
+            <input type="date" name="fecha" class="form-control" value="{{ $fecha ?? '' }}">
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button class="btn btn-outline-primary w-100"><i class="bi bi-filter"></i> Filtrar</button>
+        </div>
+    </form>
 
     <!-- Reservas de Hoy -->
     <div class="card mb-4 shadow-sm">
@@ -57,7 +82,16 @@
                                     @if($reserva->mesa_id)
                                         <span class="badge bg-secondary">Mesa {{ $reserva->mesa->numero }}</span>
                                     @else
-                                        <span class="text-muted">Sin asignar</span>
+                                        <form action="{{ route('reservas.asignar-mesa', $reserva->id) }}" method="POST" class="d-flex align-items-center gap-2">
+                                            @csrf
+                                            <select name="mesa_id" class="form-select form-select-sm" required>
+                                                <option value="">Asignar mesa...</option>
+                                                @foreach($mesasDisponibles as $mesa)
+                                                    <option value="{{ $mesa->id }}">Mesa {{ $mesa->numero }} ({{ $mesa->capacidad }}p)</option>
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
+                                        </form>
                                     @endif
                                 </td>
                                 <td>

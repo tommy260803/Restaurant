@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pago;
 use App\Models\Reserva;
+use App\Models\Mesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -111,4 +112,85 @@ class PagoController extends Controller
         return view('pagos.index', compact('pagos'));
     }
 
+    /**
+     * Dashboard: Lista de pagos asociados a reservas, con filtros.
+     */
+    public function reservasIndex(Request $request)
+    {
+        $estado = $request->input('estado'); // pendiente|confirmado|fallido
+        $q = $request->input('q'); // id reserva, numero_operacion
+        $desde = $request->input('desde');
+        $hasta = $request->input('hasta');
+
+        $query = Pago::query()
+            ->with('reserva')
+            ->whereNotNull('reserva_id');
+
+        if (!empty($estado)) {
+            $query->where('estado', $estado);
+        }
+
+        if (!empty($q)) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('numero_operacion', 'like', "%$q%")
+                    ->orWhere('reserva_id', $q)
+                    ->orWhere('id', $q);
+            });
+        }
+
+        if (!empty($desde)) {
+            $query->whereDate('fecha', '>=', $desde);
+        }
+        if (!empty($hasta)) {
+            $query->whereDate('fecha', '<=', $hasta);
+        }
+
+        $pagos = $query->orderBy('fecha', 'desc')->paginate(20)->appends($request->query());
+
+        return view('pagos.reservas_index', compact('pagos', 'estado', 'q', 'desde', 'hasta'));
+    }
+
+    /**
+     * Actualiza el estado de un pago de reserva.
+     */
+    public function actualizarEstado(Request $request, $id)
+    {
+        $data = $request->validate([
+            'estado' => 'required|in:pendiente,confirmado,fallido',
+        ]);
+
+        $pago = Pago::findOrFail($id);
+        $pago->estado = $data['estado'];
+        $pago->save();
+
+        if ($pago->reserva) {
+            // Si el pago fue confirmado:
+            if ($pago->estado === 'confirmado') {
+                // 1) Marcar la mesa como ocupada si existe
+                if ($pago->reserva->mesa_id) {
+                    Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'ocupada']);
+                }
+                // 2) Marcar la reserva como confirmada
+                $pago->reserva->update(['estado' => 'confirmada']);
+
+                // 3) Enviar correo de confirmación si hay email
+                try {
+                    if (! empty($pago->reserva->email)) {
+                        Mail::to($pago->reserva->email)->send(new ReservaConfirmada($pago->reserva));
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('No se pudo enviar el correo de confirmación para la reserva ' . $pago->reserva->id . ': ' . $e->getMessage());
+                }
+            }
+
+            // Si el pago fue fallido: liberar mesa si tuviera una
+            if ($pago->estado === 'fallido') {
+                if ($pago->reserva->mesa_id) {
+                    Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'disponible']);
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'Estado del pago actualizado');
+    }
 }
