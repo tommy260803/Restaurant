@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>RESTAURANTE</title>
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -125,35 +126,15 @@
                     </ul>
                 </li>
 
-                <!-- VENTAS Y PEDIDOS -->
-                <li class="custom-nav-item custom-dropdown-container">
-                    <a href="#" class="custom-nav-link custom-dropdown-toggle primario">
-                        <i class='bx bx-cart' style="font-size: 30px;"></i>
-                        <span class="custom-nav-label">Ventas y Pedidos</span>
-                        <i class='bx bx-chevron-down custom-dropdown-icon'></i>
+                <!-- ORDENES -->
+                <li class="custom-nav-item">
+                    <a href="{{ route('ordenes.index') }}" class="custom-nav-link">
+                        <i class='bx bx-list-check' style="font-size: 30px;"></i>
+                        <span class="custom-nav-label">Ordenes</span>
                     </a>
                     <ul class="custom-dropdown-menu">
-                        <li class="custom-nav-item custom-dropdown-container">
-                            <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
-                                <span>Pedidos</span>
-                                <i class='bx bx-chevron-down custom-dropdown-icon2'></i>
-                            </a>
-                            <ul class="custom-dropdown-menu">
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">En curso</a></li>
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">Entregados</a></li>
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">Cancelados</a></li>
-                            </ul>
-                        </li>
-                        <li class="custom-nav-item custom-dropdown-container">
-                            <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
-                                <span>Ventas</span>
-                                <i class='bx bx-chevron-down custom-dropdown-icon2'></i>
-                            </a>
-                            <ul class="custom-dropdown-menu">
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">Histórico</a></li>
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">Facturación</a></li>
-                                <li class="custom-nav-item"><a href="#" class="custom-nav-link">Reportes</a></li>
-                            </ul>
+                        <li class="custom-nav-item">
+                            <a class="custom-nav-link custom-dropdown-title">Ordenes</a>
                         </li>
                     </ul>
                 </li>
@@ -506,8 +487,15 @@
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
         @csrf
     </form>
-
+    <!-- jQuery (debe ir PRIMERO) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap JS (va después de jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Tus scripts adicionales -->
     @stack('scripts')
+
 </body>
 
 

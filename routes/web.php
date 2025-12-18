@@ -301,3 +301,48 @@ Route::patch('/pagos/{pago}', [PagoController::class, 'update'])->name('pagos.up
 Route::post('/pago/confirmar', [PagoController::class, 'guardarPago'])->name('pago.guardar');
 Route::delete('/pagos/{pago}', [PagoController::class, 'destroy'])->name('pagos.destroy');
 });
+
+
+
+
+// ============================================
+// RUTAS PARA MÓDULO DE ÓRDENES
+// Agregar estas rutas a tu archivo routes/web.php
+// ============================================
+
+use App\Http\Controllers\OrdenController;
+
+Route::prefix('ordenes')->name('ordenes.')->group(function () {
+    // Vista principal: Panel de mesas
+    Route::get('/', [OrdenController::class, 'index'])->name('index');
+    
+    // Abrir mesa (cambiar estado a ocupada)
+    Route::post('/mesa/{mesa}/abrir', [OrdenController::class, 'abrirMesa'])->name('abrir');
+    
+    // Ver detalle de orden de una mesa
+    Route::get('/mesa/{mesa}', [OrdenController::class, 'verOrden'])->name('ver');
+    
+    // Agregar plato a la orden (via AJAX)
+    Route::post('/mesa/{mesa}/agregar-plato', [OrdenController::class, 'agregarPlato'])->name('agregar_plato');
+    
+    // Actualizar cantidad de un plato (via AJAX)
+    Route::post('/mesa/{mesa}/actualizar-cantidad', [OrdenController::class, 'actualizarCantidad'])->name('actualizar_cantidad');
+    
+    // Eliminar plato de la orden (via AJAX)
+    Route::delete('/mesa/{mesa}/eliminar-plato/{plato}', [OrdenController::class, 'eliminarPlato'])->name('eliminar_plato');
+    
+    // Actualizar nota de un plato (via AJAX)
+    Route::post('/mesa/{mesa}/actualizar-nota', [OrdenController::class, 'actualizarNota'])->name('actualizar_nota');
+    
+    // Procesar cobro y cerrar mesa
+    Route::post('/mesa/{mesa}/cobrar', [OrdenController::class, 'cobrar'])->name('cobrar');
+    
+    // Obtener platos disponibles (para el modal - AJAX)
+    Route::get('/platos-disponibles', [OrdenController::class, 'getPlatosDisponibles'])->name('platos_disponibles');
+    
+    // Volver a la vista anterior (NO cancela la orden, solo regresa)
+    Route::get('/mesa/{mesa}/volver', [OrdenController::class, 'volver'])->name('volver');
+    
+    // Cancelar orden y liberar mesa (SÍ cancela la orden)
+    Route::post('/mesa/{mesa}/cancelar', [OrdenController::class, 'cancelar'])->name('cancelar');
+});
