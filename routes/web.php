@@ -75,7 +75,6 @@ Route::get('/test-roles', function() {
     ];
 })->middleware('auth');
 
-Route::get('/redirigir', [BuscarActaController::class, 'showRedirectLogin'])->name('redirectLogin');
 
 Route::get('/recovery1', [RecoveryController::class, 'step1'])->name('recovery.step1');
 Route::get('/verificarMiActa', [RecoveryController::class, 'verifyMiActa'])->name('verificarMiActa');

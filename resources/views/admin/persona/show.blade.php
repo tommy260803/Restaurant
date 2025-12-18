@@ -1,12 +1,12 @@
 @extends('layouts.plantilla')
 
-@section('titulo', 'Detalle de Persona')
+@section('titulo', 'Detalles del Personal')
 
 @section('contenido')
     <div class="container py-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4><i class="fas fa-user me-2"></i> Detalles de la Persona</h4>
+                <h4><i class="fas fa-user me-2"></i> Detalles del Personal</h4>
                 <a href="{{ route('persona.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i> Volver
                 </a>
@@ -34,10 +34,13 @@
                         <td>{{ $persona->dni }}</td>
                     </tr>
                     <tr>
-                        <th>Fecha de Nacimiento</th>
-                        <td>{{ \Carbon\Carbon::parse($persona->fecha_nacimiento)->format('d/m/Y') }}</td>
+                        <th>Sexo</th>
+                        <td>{{ $persona->sexo == 'M' ? 'Masculino' : 'Femenino' }}</td>
                     </tr>
-                    {{-- Agrega más campos si los tienes --}}
+                    <tr>
+                        <th>Dirección</th>
+                        <td>{{ $persona->direccion ?: 'No especificada' }}</td>
+                    </tr>
                 </table>
             </div>
         </div>

@@ -6,9 +6,8 @@
                     <th width="8%">ID</th>
                     <th width="25%">Nombres</th>
                     <th width="25%">Apellidos</th>
-                    <th width="12%">DNI</th>
-                    <th width="15%">Fecha Nac.</th>
-                    <th width="15%" class="text-center">Acciones</th>
+                    <th width="20%">DNI</th>
+                    <th width="20%" class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -18,7 +17,6 @@
                         <td>{{ $objpersona->nombres }}</td>
                         <td>{{ $objpersona->apellido_paterno }} {{ $objpersona->apellido_materno }}</td>
                         <td><span class="badge bg-info text-white">{{ $objpersona->dni }}</span></td>
-                        <td>{{ \Carbon\Carbon::parse($objpersona->fecha_nacimiento)->format('d/m/Y') }}</td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
                                 <a href="{{ route('persona.show', $objpersona->id_persona) }}"

@@ -1,78 +1,82 @@
 @extends('auth.plantillaLogin')
 
 @section('contenido-login')
-<div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-    <h1 class="text-2xl font-extrabold text-center text-red-700 mb-6 flex items-center justify-center gap-2">
-        <i class="ri-shield-user-line text-3xl"></i>
+    <h1 class="text-center mb-3 d-flex align-items-center justify-content-center gap-2" style="color: var(--peru-red); font-weight: 700; font-size: 1.5rem;">
+        <i class="ri-shield-user-line" style="font-size: 1.8rem;"></i>
         Inicia sesión en tu cuenta
     </h1>
 
-    <div class="flex justify-center mb-6">
-        <img src="/img/resta.png" alt="Logo Restaurante" class="h-20 w-20 object-contain">
+    <div class="text-center mb-4">
+        <img src="/img/resta.png" alt="Logo Restaurante" style="height: 80px; width: 80px; object-fit: contain;">
     </div>
 
-    <form id="login__form" action="{{ route('login') }}" method="POST" class="space-y-5">
+    <form id="login__form" action="{{ route('login') }}" method="POST">
         @csrf
 
         {{-- Correo --}}
-        <div>
-            <label for="email" class="block text-sm font-medium text-gray-600">Correo Electrónico</label>
-            <div class="relative mt-1">
+        <div class="mb-3">
+            <label for="email" class="form-label" style="font-weight: 500; color: #4b5563;">Correo Electrónico</label>
+            <div class="position-relative">
                 <input type="text" id="email" name="email_mi_acta" 
                     value="{{ old('email_mi_acta') }}"
-                    class="w-full rounded-xl border-gray-300 focus:border-red-600 focus:ring focus:ring-red-200 transition p-3 pl-10"
+                    class="form-control ps-5"
+                    style="border-radius: 10px; padding: 0.7rem 0.7rem 0.7rem 2.5rem;"
                     placeholder="ejemplo@restaurante.com">
-                <i class="ri-mail-fill absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <i class="ri-mail-fill position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
             </div>
             @error('email_mi_acta')
-                <p class="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <p class="text-danger small mt-1 d-flex align-items-center gap-1">
                     <i class="ri-error-warning-line"></i> {{ $message }}
                 </p>
             @enderror
         </div>
 
         {{-- Contraseña --}}
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-600">Contraseña</label>
-            <div class="relative mt-1">
+        <div class="mb-3">
+            <label for="password" class="form-label" style="font-weight: 500; color: #4b5563;">Contraseña</label>
+            <div class="position-relative">
                 <input type="password" id="password" name="contrasena" 
-                    class="w-full rounded-xl border-gray-300 focus:border-red-600 focus:ring focus:ring-red-200 transition p-3 pl-10"
+                    class="form-control ps-5"
+                    style="border-radius: 10px; padding: 0.7rem 0.7rem 0.7rem 2.5rem;"
                     placeholder="********">
-                <i class="ri-lock-2-fill absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <i class="ri-lock-2-fill position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
             </div>
             @error('contrasena')
-                <p class="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <p class="text-danger small mt-1 d-flex align-items-center gap-1">
                     <i class="ri-error-warning-line"></i> {{ $message }}
                 </p>
             @enderror
         </div>
 
         {{-- Link recuperar --}}
-        <div class="flex justify-end">
-            <a href="{{ route('recovery.step1') }}" class="text-sm text-red-700 hover:underline">¿Olvidaste tu contraseña?</a>
+        <div class="text-end mb-3">
+            <a href="{{ route('recovery.step1') }}" class="login-link" style="font-size: 0.9rem; color: var(--peru-red); text-decoration: none;">
+                ¿Olvidaste tu contraseña?
+            </a>
         </div>
 
         {{-- Botón --}}
-        <button type="submit" 
-            class="w-full bg-gradient-to-r from-red-700 to-yellow-500 text-white py-3 rounded-xl font-semibold shadow-md hover:scale-[1.02] transition">
+        <button type="submit" class="btn w-100 text-white d-inline-flex align-items-center justify-content-center gap-2"
+            style="background: var(--peru-red); border-radius: 10px; padding: 0.7rem; font-weight: 600; box-shadow: 0 8px 22px rgba(185,28,28,0.18);">
             Ingresar
         </button>
     </form>
 
-    <p class="text-center text-sm text-gray-600 mt-6">
-        ¿Eres cliente? Haz tu reserva o consulta tu reserva sin necesidad de crear una cuenta.<br>
-        <div class="flex flex-col items-center gap-2 mt-3">
+    <div class="text-center mt-4" style="color: #6b7280; font-size: 0.9rem;">
+        <p class="mb-3">¿Eres cliente? Haz tu reserva o consulta tu reserva sin necesidad de crear una cuenta.</p>
+        <div class="d-flex flex-column align-items-center gap-2">
             <a href="{{ route('reservas.create') }}" 
-                class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl hover:scale-105 transition-transform shadow-lg max-w-xs">
-                <i class="ri-calendar-check-line text-xl"></i>
+                class="btn text-white d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm"
+                style="background: var(--peru-red); border-radius: 10px; font-weight: 600; max-width: 300px;">
+                <i class="ri-calendar-check-line"></i>
                 Reservar Mesa
             </a>
             <a href="{{ route('reservas.consultar') }}" 
-                class="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-yellow-500 text-yellow-700 font-bold rounded-xl hover:bg-yellow-50 transition-transform max-w-xs">
-                <i class="ri-search-eye-line text-xl"></i>
+                class="btn btn-outline-soft d-inline-flex align-items-center gap-2 px-4 py-2"
+                style="max-width: 300px; font-weight: 600; border-color: var(--peru-red); color: var(--peru-red);">
+                <i class="ri-search-eye-line"></i>
                 Consultar mi Reserva
             </a>
         </div>
-    </p>
-</div>
+    </div>
 @endsection

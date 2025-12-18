@@ -93,23 +93,26 @@
                                             <option value="confirmado" {{ $pago->estado==='confirmado' ? 'selected' : '' }}>Confirmado</option>
                                             <option value="fallido" {{ $pago->estado==='fallido' ? 'selected' : '' }}>Fallido</option>
                                         </select>
-                                        <button class="btn btn-sm btn-outline-primary" title="Actualizar estado"><i class="bi bi-check2"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" title="Actualizar estado">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
                                     </form>
                                 </td>
                                 <td>{{ $pago->fecha }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('reserva.pdf', $pago->reserva_id) }}" class="btn btn-outline-secondary" title="PDF">
-                                            <i class="bi bi-filetype-pdf"></i>
+                                        <a href="{{ route('reserva.pdf', $pago->reserva_id) }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" title="Descargar PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                         <form action="{{ route('reserva.reenviar-email', $pago->reserva_id) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button class="btn btn-outline-primary" title="Reenviar">
-                                                <i class="bi bi-send"></i>
+                                            <button class="btn btn-outline-primary d-flex align-items-center justify-content-center" title="Reenviar correo">
+                                                <i class="bi bi-envelope-arrow-up"></i>
                                             </button>
                                         </form>
                                     </div>
                                 </td>
+
                             </tr>
                         @empty
                             <tr>

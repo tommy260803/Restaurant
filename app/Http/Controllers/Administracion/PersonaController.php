@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\JsonResponse;
 use App\Models\Persona;
-use App\Models\Region;
-use App\Models\Provincia;
-use App\Models\Distrito;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 class PersonaController extends Controller
@@ -21,8 +18,30 @@ class PersonaController extends Controller
 
     if ($request->filled('buscarpor') && $request->filled('buscar_por')) {
         $campo = $request->buscar_por;
-        $valor = $request->buscarpor;
-        $query->where($campo, 'like', "%{$valor}%");
+        $valor = trim($request->buscarpor);
+
+        if ($valor !== '') {
+            switch ($campo) {
+                case 'apellidos':
+                    $query->where(function ($q) use ($valor) {
+                        $q->where('apellido_paterno', 'like', "%{$valor}%")
+                          ->orWhere('apellido_materno', 'like', "%{$valor}%");
+                    });
+                    break;
+                case 'todo':
+                    $query->where(function ($q) use ($valor) {
+                        $q->where('dni', 'like', "%{$valor}%")
+                          ->orWhere('nombres', 'like', "%{$valor}%")
+                          ->orWhere('apellido_paterno', 'like', "%{$valor}%")
+                          ->orWhere('apellido_materno', 'like', "%{$valor}%")
+                          ->orWhere('direccion', 'like', "%{$valor}%");
+                    });
+                    break;
+                default:
+                    $query->where($campo, 'like', "%{$valor}%");
+                    break;
+            }
+        }
     }
     
 
@@ -45,78 +64,60 @@ public function show($id)
 
     public function create()
     {
-        $regiones = Region::all();
-        return view('admin.persona.create', compact( 'regiones'));
+        return view('admin.persona.create');
     }
 
     public function store(Request $request)
-{
-    $data = request()->validate([
-        'dni' => 'required|digits:8|unique:persona,dni',
-        'nombres' => 'required|max:30',
-        'apellido_paterno' => 'required|max:20',
-        'apellido_materno' => 'required|max:20',
-        'sexo' => 'required|in:M,F',
-        'fecha_nacimiento' => 'required|date',
-        'id_distrito' => 'required|size:6',
-        'nacionalidad' => 'required|max:20',
-        'estado_civil' => 'required|max:30',
-    ], [
-        'dni.required' => 'El campo DNI es obligatorio.',
-        'dni.digits' => 'El DNI debe tener exactamente 8 dígitos.',
-        'dni.unique' => 'El DNI ya está registrado.',
-        'nombres.required' => 'El campo nombres es obligatorio.',
-        'nombres.max' => 'El campo nombres no debe exceder 30 caracteres.',
-        'apellido_paterno.required' => 'El campo apellido paterno es obligatorio.',
-        'apellido_paterno.max' => 'El campo apellido paterno no debe exceder 20 caracteres.',
-        'apellido_materno.required' => 'El campo apellido materno es obligatorio.',
-        'apellido_materno.max' => 'El campo apellido materno no debe exceder 20 caracteres.',
-        'sexo.required' => 'El campo sexo es obligatorio.',
-        'sexo.in' => 'El campo sexo debe ser M o F.',
-        'fecha_nacimiento.required' => 'El campo fecha de nacimiento es obligatorio.',
-        'fecha_nacimiento.date' => 'Debe ingresar una fecha válida.',
-        'id_distrito.required' => 'El campo distrito es obligatorio.',
-        'id_distrito.size' => 'El código de distrito debe tener 6 caracteres.',
-        'nacionalidad.required' => 'El campo nacionalidad es obligatorio.',
-        'nacionalidad.max' => 'El campo nacionalidad no debe exceder 20 caracteres.',
-        'estado_civil.required' => 'El campo estado civil es obligatorio.',
-        'estado_civil.max' => 'El campo estado civil no debe exceder 30 caracteres.',
-    ]);
-
-    $persona = new Persona();
-    $persona->dni = $request->dni;
-    $persona->nombres = $request->nombres;
-    $persona->apellido_paterno = $request->apellido_paterno;
-    $persona->apellido_materno = $request->apellido_materno;
-    $persona->sexo = $request->sexo;
-    $persona->fecha_nacimiento = $request->fecha_nacimiento;
-    $persona->id_distrito = $request->id_distrito;
-    $persona->nacionalidad = $request->nacionalidad;
-    $persona->estado_civil = $request->estado_civil;
-    $persona->estado = '1';
-    $persona->save();
-    return redirect()->route('persona.index')->with('datos', 'Persona registrada correctamente.');
-}
-
-    public function edit(string $id)
     {
-        $persona = Persona::findOrFail($id);
-        $regiones = Region::all();
-        $provincias = $persona->distrito ? Provincia::where('id_region', $persona->distrito->provincia->id_region)->get() : collect();
-        $distritos = $persona->distrito ? Distrito::where('id_provincia', $persona->distrito->id_provincia)->get() : collect();
-        return view('admin.persona.edit', compact('persona', 'regiones', 'provincias', 'distritos'));
-    }
-
-    public function update(Request $request,$id)
-    {
-        $data = $request->validate([
+        $request->validate([
+            'dni' => 'required|digits:8|unique:persona,dni',
             'nombres' => 'required|max:30',
             'apellido_paterno' => 'required|max:20',
             'apellido_materno' => 'required|max:20',
             'sexo' => 'required|in:M,F',
-            'fecha_nacimiento' => 'required|date',
-            'nacionalidad' => 'required|max:20',
-            'estado_civil' => 'required|in:Soltero,Divorciado,Casado,Viudo',
+            'direccion' => 'nullable|max:100',
+        ], [
+            'dni.required' => 'El campo DNI es obligatorio.',
+            'dni.digits' => 'El DNI debe tener exactamente 8 dígitos.',
+            'dni.unique' => 'El DNI ya está registrado.',
+            'nombres.required' => 'El campo nombres es obligatorio.',
+            'nombres.max' => 'El campo nombres no debe exceder 30 caracteres.',
+            'apellido_paterno.required' => 'El campo apellido paterno es obligatorio.',
+            'apellido_paterno.max' => 'El campo apellido paterno no debe exceder 20 caracteres.',
+            'apellido_materno.required' => 'El campo apellido materno es obligatorio.',
+            'apellido_materno.max' => 'El campo apellido materno no debe exceder 20 caracteres.',
+            'sexo.required' => 'El campo sexo es obligatorio.',
+            'sexo.in' => 'El campo sexo debe ser M o F.',
+            'direccion.max' => 'El campo dirección no debe exceder 100 caracteres.',
+        ]);
+
+        Persona::create([
+            'dni' => $request->dni,
+            'nombres' => $request->nombres,
+            'apellido_paterno' => $request->apellido_paterno,
+            'apellido_materno' => $request->apellido_materno,
+            'sexo' => $request->sexo,
+            'direccion' => $request->direccion ?? '',
+            'estado' => '1',
+        ]);
+
+        return redirect()->route('persona.index')->with('datos', 'Personal del restaurante registrado correctamente.');
+    }
+
+    public function edit(string $id)
+    {
+        $persona = Persona::findOrFail($id);
+        return view('admin.persona.edit', compact('persona'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nombres' => 'required|max:30',
+            'apellido_paterno' => 'required|max:20',
+            'apellido_materno' => 'required|max:20',
+            'sexo' => 'required|in:M,F',
+            'direccion' => 'nullable|max:100',
         ], [
             'nombres.required' => 'El campo nombres es obligatorio.',
             'nombres.max' => 'El campo nombres no debe exceder 30 caracteres.',
@@ -126,27 +127,19 @@ public function show($id)
             'apellido_materno.max' => 'El campo apellido materno no debe exceder 20 caracteres.',
             'sexo.required' => 'El campo sexo es obligatorio.',
             'sexo.in' => 'El campo sexo debe ser M o F.',
-            'fecha_nacimiento.required' => 'El campo fecha de nacimiento es obligatorio.',
-            'fecha_nacimiento.date' => 'Debe ingresar una fecha válida.',
-            'nacionalidad.required' => 'El campo nacionalidad es obligatorio.',
-            'nacionalidad.max' => 'El campo nacionalidad no debe exceder 20 caracteres.',
-            'estado_civil.required' => 'El campo estado civil es obligatorio.',
-            'estado_civil.in' => 'El estado civil debe ser Soltero, Divorciado, Casado o Viudo.',
+            'direccion.max' => 'El campo dirección no debe exceder 100 caracteres.',
         ]);
 
         $persona = Persona::findOrFail($id);
-        $persona->dni = $request->dni;
-        $persona->nombres = $request->nombres;
-        $persona->apellido_paterno = $request->apellido_paterno;
-        $persona->apellido_materno = $request->apellido_materno;
-        $persona->sexo = $request->sexo;
-        $persona->fecha_nacimiento = $request->fecha_nacimiento;
-        $persona->id_distrito = $request->id_distrito;
-        $persona->nacionalidad = $request->nacionalidad;
-        $persona->estado_civil = $request->estado_civil;
-        $persona->save();
+        $persona->update([
+            'nombres' => $request->nombres,
+            'apellido_paterno' => $request->apellido_paterno,
+            'apellido_materno' => $request->apellido_materno,
+            'sexo' => $request->sexo,
+            'direccion' => $request->direccion ?? $persona->direccion,
+        ]);
 
-        return redirect()->route('persona.index')->with('datos', 'Persona actualizada correctamente.');
+        return redirect()->route('persona.index')->with('datos', 'Personal del restaurante actualizado correctamente.');
     }
 
     public function destroy(string $id)
@@ -186,7 +179,6 @@ public function consultarDni($dni): JsonResponse
             ]);
 
             $data = json_decode($response->getBody(), true);
-            \Log::info('Respuesta RENIEC API:', $data);
             
             if (isset($data['nombres']) && isset($data['apellidoPaterno']) && isset($data['apellidoMaterno'])) {
                 return response()->json($data);
@@ -196,18 +188,12 @@ public function consultarDni($dni): JsonResponse
             }
 
         } catch (\GuzzleHttp\Exception\ClientException $e) {
-            // Errores 4xx (400, 404, 422, etc.)
-            \Log::error('Respuesta: ' . $e->getResponse()->getBody());
-            \Log::error('Error ClientException: ' . $e->getMessage());
-            \Log::error('Código de estado: ' . $e->getResponse()->getStatusCode());
-            \Log::error('Respuesta: ' . $e->getResponse()->getBody());
+            // Errores 4xx (400, 404, 422, etc.
             return response()->json(['error' => 'DNI no encontrado'], 404);
         } catch (\GuzzleHttp\Exception\ServerException $e) {
             // Errores 5xx (500, 502, etc.)
-            \Log::error('Error ServerException: ' . $e->getMessage());
             return response()->json(['error' => 'DNI no encontrado'], 500);
         } catch (\Exception $e) {
-            \Log::error('Error general en consulta DNI: ' . $e->getMessage());
             return response()->json(['error' => 'DNI no encontrado'], 500);
         }
     }

@@ -5,15 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RESTAURANTE</title>
-    <!-- Bootstrap 5 CDN -->
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Boxicons CDN -->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Boxicons (opcional si los usas en otras partes) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css">
+
+    <!-- Remixicon (opcional si los usas en otras partes) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css">
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css">
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Tus estilos -->
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/darkmode.css">
+
+
     @yield('styles')
 </head>
 
@@ -247,26 +261,6 @@
                                 </ul>
                             </li>
                         @endrole
-                        @role('administrador')
-                            <li class="custom-nav-item custom-dropdown-container">
-                                <a href="#" class="custom-nav-link custom-dropdown-toggle secundario">
-                                    <span>Alcaldes</span>
-                                    <i class='bx bx-chevron-down custom-dropdown-icon2'></i>
-                                </a>
-
-                                <!--Segundo menu desplegable con hover-->
-                                <ul class="custom-dropdown-menu">
-                                    <li class="custom-nav-item">
-                                        <a class="custom-nav-link custom-dropdown-title">Alcaldes</a>
-                                    </li>
-                                    <hr>
-                                    <li class="custom-nav-item">
-                                        <a href="{{ route('alcalde.index') }}" class="custom-nav-link">Listar
-                                            Alcaldes</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endrole 
                     </ul>
                 </li>
 
