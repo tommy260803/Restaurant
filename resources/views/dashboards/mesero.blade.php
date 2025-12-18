@@ -31,7 +31,7 @@
         right: -60px;
         width: 200px;
         height: 200px;
-        background: radial-gradient(rgba(255,200,120,0.45), transparent 70%);
+        background: radial-gradient(rgba(100,200,255,0.45), transparent 70%);
         filter: blur(40px);
         z-index: -1;
         animation: glowMove 6s ease-in-out infinite alternate;
@@ -52,16 +52,16 @@
         width: 70px;
         height: 70px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #8b1a1a, #6e0e0e);
-        color: #ffe8b8;
+        background: linear-gradient(135deg, #1a6ba8, #0e4a7a);
+        color: #b8e8ff;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 32px;
         margin: auto;
         margin-bottom: 18px;
-        box-shadow: 0 6px 20px rgba(110, 14, 14, 0.4);
-        border: 2px solid rgba(255, 200, 120, 0.3);
+        box-shadow: 0 6px 20px rgba(14, 74, 122, 0.4);
+        border: 2px solid rgba(100, 200, 255, 0.3);
     }
 
     .title-restaurant {
@@ -115,8 +115,8 @@
         }
 
         .icon-circle-rest {
-            background: #963232;
-            color: #ffefc2;
+            background: #325696;
+            color: #c2e5ff;
         }
 
         ul li {
@@ -131,25 +131,25 @@
         <div class="col-md-8 restaurant-box text-center">
 
             <div class="icon-circle-rest">
-                <i class="bi bi-box-seam"></i>
+                <i class="bi bi-cup-hot"></i>
             </div>
 
-            <h2 class="title-restaurant">Panel Almacén</h2>
-            <p class="subtitle mb-4">Área de Almacén - Restaurante</p>
+            <h2 class="title-restaurant">Panel Mesero</h2>
+            <p class="subtitle mb-4">Área de Servicio - Restaurante</p>
 
             <p class="fs-5 mb-3 welcome-text">
-                ¡Hola, <strong>{{ $usuario->nombre_usuario }}</strong>}!  
-                Bienvenido al panel de almacén.
+                ¡Hola, <strong>{{ $usuario->nombre_usuario }}</strong>!  
+                Bienvenido al panel de mesero.
             </p>
 
             <p class="info-text">
-                Desde aquí podrás gestionar:
+                Desde aquí puedes gestionar las mesas, pedidos y llevar el servicio del restaurante.
             </p>
 
             <ul class="text-start d-inline-block">
-                <li><i class="bi bi-basket3 me-2 text-warning"></i>Inventario e insumos</li>
-                <li><i class="bi bi-arrow-down-circle me-2 text-primary"></i>Entradas de compras</li>
-                <li><i class="bi bi-arrow-left-right me-2 text-success"></i>Movimientos de stock</li>
+                <li><i class="bi bi-table me-2 text-primary"></i>Gestionar mesas</li>
+                <li><i class="bi bi-clipboard-list me-2 text-info"></i>Ver pedidos de cliente</li>
+                <li><i class="bi bi-cash-coin me-2 text-success"></i>Registrar pagos</li>
             </ul>
 
             <div class="mt-4 small" style="font-weight: 600; color: #4a4a4a;">
@@ -159,6 +159,6 @@
 
         </div>
     </div>
-}</div>
+</div>
 
 @endsection

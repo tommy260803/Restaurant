@@ -79,4 +79,17 @@ class HomeController extends Controller
         
         return view('dashboards.caja', compact('usuario'));
     }
+
+    /**
+     * Dashboard del Mesero
+     */
+    public function mseroDashboard()
+    {
+        $usuario = Auth::user();
+        
+        // Aquí puedes agregar mesas disponibles, pedidos activos, etc.
+        // Ejemplo: $mesasOcupadas = Mesa::where('estado', 'ocupada')->get();
+        
+        return view('dashboards.mesero', compact('usuario'));
+    }
 }

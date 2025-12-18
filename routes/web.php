@@ -117,6 +117,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/caja/dashboard', [HomeController::class, 'cajaDashboard'])->name('caja.dashboard');
     });
 
+    // Dashboard Mesero
+    Route::middleware(['role:mesero'])->group(function () {
+        Route::get('/mesero/dashboard', [HomeController::class, 'mseroDashboard'])->name('mesero.dashboard');
+    });
+
     // ========================================
     // RUTAS PARA CAJERO Y ADMINISTRADOR - RESERVAS
     // ========================================

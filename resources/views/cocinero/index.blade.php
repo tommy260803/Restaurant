@@ -129,12 +129,15 @@
                     <button class="btn btn-sm btn-info text-white btn-detalle" data-id="{{ $p->id }}" title="Ver detalle">
                       <i class="bi bi-eye-fill me-1"></i>Ver
                     </button>
-                    <button class="btn btn-sm btn-primary btn-preparar" data-id="{{ $p->id }}" title="Marcar en preparación">
-                      <i class="bi bi-fire me-1"></i>Preparar
-                    </button>
-                    <button class="btn btn-sm btn-success btn-preparado" data-id="{{ $p->id }}" title="Marcar como preparado">
-                      <i class="bi bi-check2 me-1"></i>Listo
-                    </button>
+                    @if($p->estado === 'Enviado a cocina')
+                      <button class="btn btn-sm btn-primary btn-preparar" data-id="{{ $p->id }}" title="Marcar en preparación">
+                        <i class="bi bi-fire me-1"></i>Preparar
+                      </button>
+                    @elseif($p->estado === 'En preparación')
+                      <button class="btn btn-sm btn-success btn-preparado" data-id="{{ $p->id }}" title="Marcar como preparado">
+                        <i class="bi bi-check2 me-1"></i>Listo
+                      </button>
+                    @endif
                   </div>
                 </td>
               </tr>
@@ -470,40 +473,55 @@
         return;
       }
 
-      tbody.innerHTML = payload.data.map(p => `
-        <tr data-id="${p.id}">
-          <td class="fw-bold">
-            <i class="bi bi-clock text-muted me-1"></i>
-            ${p.hora || '—'}
-          </td>
-          <td>
-            ${p.mesa ? `<span class="badge bg-dark"><i class="bi bi-table me-1"></i>Mesa ${p.mesa}</span>` : '<span class="text-muted">—</span>'}
-          </td>
-          <td class="fw-semibold">${p.cliente || '—'}</td>
-          <td>
-            <i class="bi bi-dish text-primary me-1"></i>
-            ${p.plato || '—'}
-          </td>
-          <td class="text-center">
-            <span class="badge bg-info rounded-pill">${p.cantidad || '—'}</span>
-          </td>
-          <td>
-            <small class="text-muted">${(p.notas || 'Sin observaciones').substring(0, 30)}${(p.notas && p.notas.length > 30) ? '...' : ''}</small>
-          </td>
-          <td class="text-center">
-            <div class="btn-group" role="group">
-              <button class="btn btn-sm btn-info text-white btn-detalle" data-id="${p.id}" title="Ver detalle">
-                <i class="bi bi-eye-fill me-1"></i>Ver
-              </button>
-              <button class="btn btn-sm btn-primary btn-preparar" data-id="${p.id}" title="Marcar en preparación">
-                <i class="bi bi-fire me-1"></i>Preparar
-              </button>
-              <button class="btn btn-sm btn-success btn-preparado" data-id="${p.id}" title="Marcar como preparado">
-                <i class="bi bi-check2 me-1"></i>Listo
-              </button>
-            </div>
-          </td>
-        </tr>`).join('');
+      tbody.innerHTML = payload.data.map(p => {
+        // Determinar qué botones mostrar según el estado
+        const botonesPendiente = `
+          <button class="btn btn-sm btn-info text-white btn-detalle" data-id="${p.id}" title="Ver detalle">
+            <i class="bi bi-eye-fill me-1"></i>Ver
+          </button>
+          <button class="btn btn-sm btn-primary btn-preparar" data-id="${p.id}" title="Marcar en preparación">
+            <i class="bi bi-fire me-1"></i>Preparar
+          </button>`;
+        
+        const botonesPreparacion = `
+          <button class="btn btn-sm btn-info text-white btn-detalle" data-id="${p.id}" title="Ver detalle">
+            <i class="bi bi-eye-fill me-1"></i>Ver
+          </button>
+          <button class="btn btn-sm btn-success btn-preparado" data-id="${p.id}" title="Marcar como preparado">
+            <i class="bi bi-check2 me-1"></i>Listo
+          </button>`;
+        
+        const botones = p.estado === 'En preparación' ? botonesPreparacion : botonesPendiente;
+        const badge = p.estado === 'en_preparacion' ? '<span class="badge bg-info ms-2">En Preparación</span>' : '';
+        
+        return `
+          <tr data-id="${p.id}" data-estado="${p.estado}">
+            <td class="fw-bold">
+              <i class="bi bi-clock text-muted me-1"></i>
+              ${p.hora || '—'}
+            </td>
+            <td>
+              ${p.mesa ? `<span class="badge bg-dark"><i class="bi bi-table me-1"></i>Mesa ${p.mesa}</span>` : '<span class="text-muted">—</span>'}
+            </td>
+            <td class="fw-semibold">${p.cliente || '—'}</td>
+            <td>
+              <i class="bi bi-dish text-primary me-1"></i>
+              ${p.plato || '—'}
+            </td>
+            <td class="text-center">
+              <span class="badge bg-info rounded-pill">${p.cantidad || '—'}</span>
+            </td>
+            <td>
+              <small class="text-muted">${(p.notas || 'Sin observaciones').substring(0, 30)}${(p.notas && p.notas.length > 30) ? '...' : ''}</small>
+              ${badge}
+            </td>
+            <td class="text-center">
+              <div class="btn-group" role="group">
+                ${botones}
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
         
     } catch(e) {
       console.error('Error en refreshPendientes:', e);

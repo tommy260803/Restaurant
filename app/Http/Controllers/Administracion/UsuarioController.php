@@ -103,15 +103,14 @@ class UsuarioController extends Controller
             $usuario = Usuario::findOrFail($id);
 
             // Validaciones
-            if ($request->hasFile('foto')) {
-            }
             $data = $request->validate([
-                'nombre_usuario' => 'required|max:30',
+                'nombre_usuario' => 'required|max:30|unique:usuarios,nombre_usuario,' . $usuario->id_usuario . ',id_usuario',
                 'email_mi_acta' => 'required|email|unique:usuarios,email_mi_acta,' . $usuario->id_usuario . ',id_usuario',
                 'email_respaldo' => 'nullable|email',
                 'contrasena' => 'nullable|min:6',
                 'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072', // 3MB
                 'portada' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB
+                'rol' => 'nullable|in:administrador,cocinero,almacenero,cajero,mesero,registrador',
             ], [
                 'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
                 'nombre_usuario.max' => 'El nombre de usuario no puede tener más de 30 caracteres.',
@@ -126,6 +125,7 @@ class UsuarioController extends Controller
                 'portada.image' => 'El archivo debe ser una imagen.',
                 'portada.mimes' => 'La portada debe ser jpg, jpeg, png o webp.',
                 'portada.max' => 'La portada no debe superar los 5MB.',
+                'rol.in' => 'El rol seleccionado no es válido.',
             ]);
 
             $usuario->nombre_usuario = $request->nombre_usuario;
@@ -164,6 +164,11 @@ class UsuarioController extends Controller
             // Guardar cambios
             $usuario->save();
 
+            // Actualizar rol si se proporciona
+            if ($request->filled('rol')) {
+                $usuario->syncRoles($request->rol);
+            }
+
             return redirect()->route('usuarios.perfil', $usuario->id_usuario)
                            ->with('success', 'Perfil actualizado correctamente.');
             
@@ -195,7 +200,7 @@ public function cuenta($id)
     $usuario = Usuario::with(['persona.distrito.provincia.region'])->findOrFail($id);
     
     // Verificar que el usuario solo puede ver su propia cuenta
-    if (auth()->user()->id_usuario != $usuario->id_usuario) {
+    if (Auth::user()->id_usuario != $usuario->id_usuario) {
         return redirect()->route('home')->with('error', 'No tiene permisos para acceder a esta sección.');
     }
 
@@ -241,7 +246,7 @@ public function getDistritos($provinciaId)
     $usuario = Usuario::with('persona')->findOrFail($id);
 
     // Verificar que el usuario solo puede editar su propia cuenta
-    if (auth()->user()->id_usuario != $usuario->id_usuario) {
+    if (Auth::user()->id_usuario != $usuario->id_usuario) {
         if ($request->ajax()) {
             return response()->json([
                 'success' => false,
@@ -352,7 +357,7 @@ public function getDistritos($provinciaId)
         DB::rollBack();
         
         // Log del error para debugging
-        \Log::error('Error al actualizar perfil de usuario: ' . $e->getMessage(), [
+        Log::error('Error al actualizar perfil de usuario: ' . $e->getMessage(), [
             'user_id' => $usuario->id_usuario,
             'data' => $data,
             'trace' => $e->getTraceAsString()
