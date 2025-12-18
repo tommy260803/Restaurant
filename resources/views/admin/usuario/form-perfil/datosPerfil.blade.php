@@ -3,7 +3,7 @@
 @section('datosUsuario')
     <div class="card-body p-4">
         {{-- FORMULARIO PRINCIPAL --}}
-        <form action="{{ route('usuarios.update', $usuario->id_usuario) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('usuarios.perfil.update', $usuario->id_usuario) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -182,9 +182,19 @@
                             <label class="form-label fw-medium text-dark">
                                 <i class='bx bx-shield me-2 text-success'></i>Rol asignado
                             </label>
-                            <input type="text" class="form-control form-control-lg shadow-sm border-0"
-                                style="background-color: #e9ecef; border-radius: 0.75rem;" value="{{ $usuario->rol }}"
-                                readonly>
+                            <select name="rol" class="form-select form-control-lg shadow-sm border-0"
+                                style="background-color: #f8f9fa; border-radius: 0.75rem;">
+                                <option value="">Seleccione un rol</option>
+                                <option value="administrador" {{ old('rol', $usuario->getRoleNames()->first()) == 'administrador' ? 'selected' : '' }}>Administrador</option>
+                                <option value="cocinero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cocinero' ? 'selected' : '' }}>Cocinero</option>
+                                <option value="almacenero" {{ old('rol', $usuario->getRoleNames()->first()) == 'almacenero' ? 'selected' : '' }}>Almacenero</option>
+                                <option value="cajero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cajero' ? 'selected' : '' }}>Cajero</option>
+                                <option value="mesero" {{ old('rol', $usuario->getRoleNames()->first()) == 'mesero' ? 'selected' : '' }}>Mesero</option>
+                                <option value="registrador" {{ old('rol', $usuario->getRoleNames()->first()) == 'registrador' ? 'selected' : '' }}>Registrador</option>
+                            </select>
+                            @error('rol')
+                                <small class="text-danger fw-medium">{{ $message }}</small>
+                            @enderror
                         </div>
 
                         <div class="col-md-6">

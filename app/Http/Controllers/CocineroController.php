@@ -201,7 +201,7 @@ class CocineroController extends Controller
         $today = Carbon::today();
         
         $items = Pedido::with(['reserva.mesa', 'plato'])
-            ->where('estado', 'Enviado a cocina')
+            ->whereIn('estado', ['Enviado a cocina', 'En preparación'])
             ->whereHas('reserva', function($q) use ($today) { 
                 $q->whereDate('fecha_reserva', '>=', $today); 
             })
@@ -211,6 +211,7 @@ class CocineroController extends Controller
             ->map(function($p){
                 return [
                     'id' => $p->id,
+                    'estado' => $p->estado,
                     'hora' => optional($p->created_at)->format('H:i'),
                     'mesa' => optional(optional($p->reserva)->mesa)->numero,
                     'cliente' => optional($p->reserva)->nombre_cliente,

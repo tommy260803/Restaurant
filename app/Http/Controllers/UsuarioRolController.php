@@ -64,6 +64,12 @@ class UsuarioRolController extends Controller
                     
                 'cajero' => redirect()->route('caja.dashboard')
                     ->with('success', '¡Bienvenido a Caja!'),
+                
+                'mesero' => redirect()->route('mesero.dashboard')
+                    ->with('success', '¡Bienvenido Mesero!'),
+                
+                'registrador' => redirect()->route('home')
+                    ->with('success', '¡Bienvenido Registrador!'),
                     
                 default => redirect()->route('home')
                     ->with('success', '¡Bienvenido!')
@@ -111,7 +117,7 @@ class UsuarioRolController extends Controller
         'contrasena' => 'required|min:6',
         'email_mi_acta' => 'required|email|unique:usuarios,email_mi_acta',
         'email_respaldo' => 'nullable|email',
-        'rol' => 'required|in:administrador,cocinero,almacenero,cajero',
+        'rol' => 'required|in:administrador,cocinero,almacenero,cajero,mesero,registrador',
     ], [
         'dni_usuario.required' => 'Debe seleccionar un DNI válido.',
         'dni_usuario.exists' => 'El DNI no está registrado en la tabla persona.',
@@ -169,7 +175,7 @@ class UsuarioRolController extends Controller
             'nombre_usuario' => 'required|max:30|unique:usuarios,nombre_usuario,' . $id . ',id_usuario',
             'email_mi_acta' => 'required|email|unique:usuarios,email_mi_acta,' . $id . ',id_usuario',
             'email_respaldo' => 'nullable|email',
-            'rol' => 'required|in:administrador,cocinero,almacenero,cajero',
+            'rol' => 'required|in:administrador,cocinero,almacenero,cajero,mesero,registrador',
             'contrasena' => 'nullable|min:6', // Opcional en edición
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'portada' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',

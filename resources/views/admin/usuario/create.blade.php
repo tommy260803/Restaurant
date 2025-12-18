@@ -65,6 +65,8 @@
                                     <option value="cocinero" {{ old('rol') == 'cocinero' ? 'selected' : '' }}>Cocinero</option>
                                     <option value="almacenero" {{ old('rol') == 'almacenero' ? 'selected' : '' }}>Almacenero</option>
                                     <option value="cajero" {{ old('rol') == 'cajero' ? 'selected' : '' }}>Cajero</option>
+                                    <option value="mesero" {{ old('rol') == 'mesero' ? 'selected' : '' }}>Mesero</option>
+                                    <option value="registrador" {{ old('rol') == 'registrador' ? 'selected' : '' }}>Registrador</option>
                                 </select>
                                 @error('rol')
                                     <div class="invalid-feedback">{{ $message }}</div>

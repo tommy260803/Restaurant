@@ -62,6 +62,8 @@
                             <option value="cocinero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cocinero' ? 'selected' : '' }}>Cocinero</option>
                             <option value="almacenero" {{ old('rol', $usuario->getRoleNames()->first()) == 'almacenero' ? 'selected' : '' }}>Almacenero</option>
                             <option value="cajero" {{ old('rol', $usuario->getRoleNames()->first()) == 'cajero' ? 'selected' : '' }}>Cajero</option>
+                            <option value="mesero" {{ old('rol', $usuario->getRoleNames()->first()) == 'mesero' ? 'selected' : '' }}>Mesero</option>
+                            <option value="registrador" {{ old('rol', $usuario->getRoleNames()->first()) == 'registrador' ? 'selected' : '' }}>Registrador</option>
                         </select>
                         @error('rol')
                             <div class="invalid-feedback">{{ $message }}</div>
