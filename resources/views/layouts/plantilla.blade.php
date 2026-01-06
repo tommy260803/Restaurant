@@ -444,9 +444,13 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS y dependencias -->
+    <!-- jQuery (opcional - solo si tus scripts personalizados lo necesitan) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap JS Bundle (incluye Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js para gráficos -->
+    
+    <!-- Scripts personalizados del sidebar y tema -->
     <script src="/js/sidebar.js"></script>
     <script src="/js/darkmode.js"></script>
 
@@ -476,24 +480,16 @@
             });
         }
     </script>
+    
     @yield('js')
+    
     <style>
         .swal2-actions {
             gap: 0.75rem !important;
-            /* o prueba 1rem para más separación */
         }
     </style>
-
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-        @csrf
-    </form>
-    <!-- jQuery (debe ir PRIMERO) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Bootstrap JS (va después de jQuery) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Tus scripts adicionales -->
+    <!-- Scripts adicionales de las vistas -->
     @stack('scripts')
 
 </body>
