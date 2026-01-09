@@ -387,4 +387,19 @@ class OrdenController extends Controller
         
         return $total;
     }
+
+    private function obtenerProximaReservaHoy($mesa, $fechaHoy)
+    {
+        $ahora = Carbon::now();
+        
+        return $mesa->reservas()
+            ->whereDate('fecha_reserva', $fechaHoy)
+            ->whereIn('estado', ['confirmada', 'pendiente'])
+            ->where(function($query) use ($ahora) {
+                // Solo mostrar si la hora aún no ha pasado
+                $query->whereRaw("TIME(hora_reserva) >= ?", [$ahora->format('H:i:s')]);
+            })
+            ->orderBy('hora_reserva')
+            ->first();
+    }
 }

@@ -43,7 +43,8 @@
             @php
                 // Obtener estado calculado (considerando reservas)
                 $estadoCalculado = $mesa->estado_calculado ?? $mesa->estado;
-                $proximaReserva = $mesa->proxima_reserva;
+                //trae reservas de HOY
+                $proximaReservaHoy = $mesa->proxima_reserva_hoy ?? null;
             @endphp
             
             <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
@@ -73,12 +74,12 @@
                         @endif
 
                         {{-- Información de próxima reserva si existe --}}
-                        @if($estadoCalculado === 'disponible' && $proximaReserva)
+                        @if($estadoCalculado === 'disponible' && $proximaReservaHoy)
                             <div class="alert alert-info py-1 px-2 mb-3" style="font-size: 0.75rem; background-color: #17a2b8; border-color: #17a2b8; color: #fff;">
                                 <i class="bi bi-calendar-check me-1"></i>
                                 <strong>Reserva:</strong><br>
-                                {{ \Carbon\Carbon::parse($proximaReserva->fecha_reserva)->format('d/m/Y') }}<br>
-                                {{ \Carbon\Carbon::parse($proximaReserva->hora_reserva)->format('g:i A') }}
+                                {{ \Carbon\Carbon::parse($proximaReservaHoy->fecha_reserva)->format('d/m/Y') }}<br>
+                                <strong>{{ \Carbon\Carbon::parse($proximaReservaHoy->hora_reserva)->format('g:i A') }}</strong>
                             </div>
                         @endif
 
@@ -113,8 +114,9 @@
                             
                             {{-- Mostrar info de la reserva activa --}}
                             @php
-                                $reservaActiva = $mesa->reservas->first(function($r) {
-                                    $ahora = \Carbon\Carbon::now();
+                                $ahora = \Carbon\Carbon::now();
+                                $reservaActiva = $mesa->reservas->first(function($r) use ($ahora) {
+                                    // Solo buscar en reservas de HOY que ya fueron cargadas
                                     $horaReserva = \Carbon\Carbon::parse($r->fecha_reserva->toDateString() . ' ' . $r->hora_reserva);
                                     return $ahora->between($horaReserva->copy()->subMinutes(30), $horaReserva->copy()->addHours(2));
                                 });
@@ -122,7 +124,7 @@
                             
                             @if($reservaActiva)
                                 <small class="text-info d-block mt-2" style="font-size: 0.7rem;">
-                                    {{ \Carbon\Carbon::parse($reservaActiva->hora_reserva)->format('g:i A') }}<br>
+                                    <strong>{{ \Carbon\Carbon::parse($reservaActiva->hora_reserva)->format('g:i A') }}</strong><br>
                                     {{ $reservaActiva->nombre_cliente }}
                                 </small>
                             @endif
