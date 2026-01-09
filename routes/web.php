@@ -1,5 +1,12 @@
 <?php
 
+
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\PagoDeliveryController;
+use App\Http\Controllers\DeliveryAdminController;
+use App\Http\Controllers\DeliveryCocinaController;
+
+
 use App\Http\Controllers\Actas\ProveedorController;
 
 use App\Http\Controllers\CategoriaController;
@@ -38,6 +45,75 @@ use App\Http\Controllers\Actas\{
 use App\Http\Controllers\UbigeoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\TarifaController;
+
+
+// ========================================
+// RUTAS PÚBLICAS DE DELIVERY (CLIENTES)
+// ========================================
+Route::prefix('delivery')->name('delivery.')->group(function () {
+    // Hacer pedido (público)
+    Route::get('/hacer-pedido', [DeliveryController::class, 'create'])->name('create');
+    Route::post('/hacer-pedido', [DeliveryController::class, 'store'])->name('store');
+    
+    // Consultar estado del pedido (público)
+    Route::get('/consultar', [DeliveryController::class, 'consultarEstado'])->name('consultar');
+    Route::post('/consultar', [DeliveryController::class, 'buscarPedido'])->name('buscar');
+    Route::get('/estado/{id}', [DeliveryController::class, 'show'])->name('estado');
+    
+    // Proceso de pago (público)
+    Route::get('/{id}/pago', [PagoDeliveryController::class, 'create'])->name('pago');
+    Route::post('/{id}/pago', [PagoDeliveryController::class, 'store'])->name('pago.store');
+});
+
+// ========================================
+// RUTAS PROTEGIDAS - ADMINISTRACIÓN DELIVERY
+// ========================================
+Route::middleware(['auth'])->group(function () {
+    
+    // ========================================
+    // ADMINISTRACIÓN DE DELIVERY (Cajero/Admin)
+    // ========================================
+    Route::middleware(['role:cajero|administrador'])->prefix('admin/delivery')->name('admin.delivery.')->group(function () {
+        // Listar todos los pedidos delivery
+        Route::get('/', [DeliveryAdminController::class, 'index'])->name('index');
+        
+        // Ver detalle de un pedido
+        Route::get('/{id}', [DeliveryAdminController::class, 'show'])->name('show');
+        
+        // Confirmar pago
+        Route::post('/{id}/confirmar-pago', [DeliveryAdminController::class, 'confirmarPago'])->name('confirmar-pago');
+        
+        // Rechazar pago
+        Route::post('/{id}/rechazar-pago', [DeliveryAdminController::class, 'rechazarPago'])->name('rechazar-pago');
+        
+        // Cambiar estado del pedido
+        Route::post('/{id}/cambiar-estado', [DeliveryAdminController::class, 'cambiarEstado'])->name('cambiar-estado');
+        
+        // Eliminar pedido
+        Route::delete('/{id}', [DeliveryAdminController::class, 'destroy'])->name('destroy');
+    });
+    
+    // ========================================
+    // COCINA - DELIVERY (Cocinero/Admin)
+    // ========================================
+    Route::middleware(['role:cocinero|administrador'])->prefix('cocina/delivery')->name('cocina.delivery.')->group(function () {
+        // Ver pedidos delivery en cocina
+        Route::get('/', [DeliveryCocinaController::class, 'index'])->name('index');
+        
+        // Cambiar estado de un plato específico
+        Route::post('/plato/{id}/estado', [DeliveryCocinaController::class, 'cambiarEstadoPlato'])->name('cambiar-estado-plato');
+    });
+});
+
+
+
+
+
+
+
+
+
+
 
 // RUTAS PÚBLICAS
 Route::get('/', [PresentationController::class, 'presentation'])->name('presentacion');

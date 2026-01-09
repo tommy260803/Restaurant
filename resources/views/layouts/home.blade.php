@@ -18,6 +18,26 @@
 
     <!-- Opciones principales -->
     <div class="row justify-content-center g-4 mb-4">
+        <!-- Delivery -->
+<div class="col-lg-3 col-md-4">
+    <div class="card h-100 shadow border-0">
+        <div class="card-body text-center p-4">
+            <div class="service-icon mb-3">
+                <i class="fas fa-motorcycle fa-3x text-success"></i>
+            </div>
+            <h5 class="card-title fw-bold mb-3">Delivery</h5>
+            <p class="card-text text-muted mb-4">
+                Pedidos delivery para cocina y seguimiento.
+            </p>
+            <div class="d-grid gap-2">
+                <a href="{{ route('cocina.delivery.index') }}" class="btn btn-success">
+                    <i class="fas fa-list me-2"></i>Ver Pedidos Delivery
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
         <!-- Mesas -->
         <div class="col-lg-3 col-md-4">
             <div class="card h-100 shadow border-0">

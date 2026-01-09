@@ -77,6 +77,14 @@
                 <i class="ri-search-eye-line"></i>
                 Consultar mi Reserva
             </a>
+
+            {{-- 🔥 DELIVERY --}}
+    <a href="{{ route('delivery.create') }}" 
+        class="btn text-white d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm"
+        style="background: #16a34a; border-radius: 10px; font-weight: 600; max-width: 300px;">
+        <i class="ri-e-bike-2-line"></i>
+        Pide tu Delivery
+    </a>
         </div>
     </div>
 @endsection
