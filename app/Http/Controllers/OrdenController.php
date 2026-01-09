@@ -6,6 +6,7 @@ use App\Models\Mesa;
 use App\Models\Plato; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Carbon\Carbon;
 
 class OrdenController extends Controller
 {
@@ -15,15 +16,17 @@ class OrdenController extends Controller
      */
     public function index()
     {
-        $mesas = Mesa::with(['reservas' => function($query) {
-            // Solo cargar reservas confirmadas o pendientes
-            $query->whereIn('estado', ['confirmada', 'pendiente'])
-                  ->orderBy('fecha_reserva')
+        $hoy = Carbon::today(); // Fecha de hoy sin hora
+        
+        $mesas = Mesa::with(['reservas' => function($query) use ($hoy) {
+            // ✅ CORRECCIÓN: Solo cargar reservas de HOY
+            $query->whereDate('fecha_reserva', $hoy)
+                  ->whereIn('estado', ['confirmada', 'pendiente'])
                   ->orderBy('hora_reserva');
         }])->orderBy('numero')->get();
         
         // Agregar estado calculado y próxima reserva a cada mesa
-        $mesas->map(function ($mesa) {
+        $mesas->map(function ($mesa) use ($hoy) {
             // Obtener estado real considerando reservas
             $mesa->estado_calculado = $mesa->estado_real;
             
@@ -31,8 +34,8 @@ class OrdenController extends Controller
             $orden = $this->obtenerOrdenMesa($mesa->id);
             $mesa->tiene_orden_activa = !empty($orden);
             
-            // Obtener próxima reserva (para mostrar información adicional)
-            $mesa->proxima_reserva = $mesa->proxima_reserva;
+            // Obtener próxima reserva SOLO DEL DÍA DE HOY
+            $mesa->proxima_reserva_hoy = $this->obtenerProximaReservaHoy($mesa, $hoy);
             
             return $mesa;
         });

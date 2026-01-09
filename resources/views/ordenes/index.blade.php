@@ -43,6 +43,7 @@
             @php
                 // Obtener estado calculado (considerando reservas)
                 $estadoCalculado = $mesa->estado_calculado ?? $mesa->estado;
+
                 //trae reservas de HOY
                 $proximaReservaHoy = $mesa->proxima_reserva_hoy ?? null;
             @endphp
@@ -55,7 +56,7 @@
                             Mesa #{{ $mesa->numero }}
                         </h5>
 
-                        {{-- Información adicional - COLOR MEJORADO --}}
+                        {{-- Información adicional --}}
                         <p class="small mb-3" style="color: #b8b8d1;">
                             <i class="bi bi-people me-1"></i>Capacidad: {{ $mesa->capacidad }}
                         </p>
@@ -118,7 +119,7 @@
                                 $reservaActiva = $mesa->reservas->first(function($r) use ($ahora) {
                                     // Solo buscar en reservas de HOY que ya fueron cargadas
                                     $horaReserva = \Carbon\Carbon::parse($r->fecha_reserva->toDateString() . ' ' . $r->hora_reserva);
-                                    return $ahora->between($horaReserva->copy()->subMinutes(30), $horaReserva->copy()->addHours(2));
+                                    return $ahora->between($horaReserva->copy()->subMinutes(60), $horaReserva->copy()->addHours(5));
                                 });
                             @endphp
                             
@@ -196,6 +197,10 @@
     @keyframes fadeIn {
         from { opacity: 0; transform: scale(0.9); }
         to { opacity: 1; transform: scale(1); }
+    }
+
+    .alert-info {
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
     }
 </style>
 @endpush
