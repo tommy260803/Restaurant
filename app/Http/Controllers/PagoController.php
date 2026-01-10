@@ -167,9 +167,9 @@ class PagoController extends Controller
             // Si el pago fue confirmado:
             if ($pago->estado === 'confirmado') {
                 // 1) Marcar la mesa como ocupada si existe
-                if ($pago->reserva->mesa_id) {
-                    Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'ocupada']);
-                }
+                // if ($pago->reserva->mesa_id) {
+                //     Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'ocupada']);
+                // }
                 // 2) Marcar la reserva como confirmada
                 $pago->reserva->update(['estado' => 'confirmada']);
 
@@ -185,9 +185,13 @@ class PagoController extends Controller
 
             // Si el pago fue fallido: liberar mesa si tuviera una
             if ($pago->estado === 'fallido') {
-                if ($pago->reserva->mesa_id) {
-                    Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'disponible']);
-                }
+                // if ($pago->reserva->mesa_id) {
+                //     Mesa::where('id', $pago->reserva->mesa_id)->update(['estado' => 'disponible']);
+                // }
+
+                $pago->reserva->update([
+                    'estado' => 'cancelada'
+                ]);
             }
         }
 
