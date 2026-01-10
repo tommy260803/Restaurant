@@ -1,3 +1,4 @@
+{{-- cocinero/index.blade.php--}}
 @extends('layouts.plantilla')
 
 @section('title', 'Cocina - Dashboard')
@@ -99,42 +100,56 @@
           </thead>
           <tbody id="tabla-pendientes">
             @forelse($pedidos as $p)
-              <tr data-id="{{ $p->id }}">
+              <tr data-id="{{ $p['id'] }}" data-tipo="{{ $p['tipo'] }}">
                 <td class="fw-bold">
                   <i class="bi bi-clock text-muted me-1"></i>
-                  {{ $p->created_at->format('H:i') }}
+                  {{ \Carbon\Carbon::parse($p['created_at'])->format('H:i') }}
                 </td>
                 <td>
-                  @if($p->reserva?->mesa?->numero)
+                  @if($p['mesa'])
                     <span class="badge bg-dark">
-                      <i class="bi bi-table me-1"></i>Mesa {{ $p->reserva->mesa->numero }}
+                      <i class="bi bi-table me-1"></i>Mesa {{ $p['mesa'] }}
                     </span>
                   @else
                     <span class="text-muted">—</span>
                   @endif
                 </td>
-                <td class="fw-semibold">{{ $p->reserva?->nombre_cliente ?? '—' }}</td>
+                <td class="fw-semibold">
+                  {{ $p['cliente'] ?? '—' }}
+                  @if($p['tipo'] === 'orden')
+                    <span class="badge bg-secondary ms-2">Orden Directa</span>
+                  @endif
+                </td>
                 <td>
                   <i class="bi bi-dish text-primary me-1"></i>
-                  {{ $p->plato?->nombre ?? '—' }}
+                  {{ $p['plato'] ?? '—' }}
                 </td>
                 <td class="text-center">
-                  <span class="badge bg-info rounded-pill">{{ $p->cantidad }}</span>
+                  <span class="badge bg-info rounded-pill">{{ $p['cantidad'] }}</span>
                 </td>
                 <td>
-                  <small class="text-muted">{{ Str::limit($p->notas ?? 'Sin observaciones', 30) }}</small>
+                  <small class="text-muted">{{ Str::limit($p['notas'] ?? 'Sin observaciones', 30) }}</small>
                 </td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
-                    <button class="btn btn-sm btn-info text-white btn-detalle" data-id="{{ $p->id }}" title="Ver detalle">
+                    <button class="btn btn-sm btn-info text-white btn-detalle" 
+                            data-id="{{ $p['id'] }}" 
+                            data-tipo="{{ $p['tipo'] }}"
+                            title="Ver detalle">
                       <i class="bi bi-eye-fill me-1"></i>Ver
                     </button>
-                    @if($p->estado === 'Enviado a cocina')
-                      <button class="btn btn-sm btn-primary btn-preparar" data-id="{{ $p->id }}" title="Marcar en preparación">
+                    @if($p['estado'] === 'Enviado a cocina')
+                      <button class="btn btn-sm btn-primary btn-preparar" 
+                              data-id="{{ $p['id'] }}" 
+                              data-tipo="{{ $p['tipo'] }}"
+                              title="Marcar en preparación">
                         <i class="bi bi-fire me-1"></i>Preparar
                       </button>
-                    @elseif($p->estado === 'En preparación')
-                      <button class="btn btn-sm btn-success btn-preparado" data-id="{{ $p->id }}" title="Marcar como preparado">
+                    @elseif($p['estado'] === 'En preparación')
+                      <button class="btn btn-sm btn-success btn-preparado" 
+                              data-id="{{ $p['id'] }}" 
+                              data-tipo="{{ $p['tipo'] }}"
+                              title="Marcar como preparado">
                         <i class="bi bi-check2 me-1"></i>Listo
                       </button>
                     @endif
@@ -272,8 +287,8 @@
     }
   }
 
-  // Función para cargar detalle
-  async function cargarDetalle(id){
+  // Función para cargar detalle - CORREGIDA
+  async function cargarDetalle(id, tipo){
     const bodyEl = document.getElementById('modalDetalleBody');
     if (!bodyEl) return;
     
@@ -286,7 +301,11 @@
       </div>`;
     
     try {
-      const res = await fetch(`{{ route('cocinero.api.pedido', ':id') }}`.replace(':id', id), {
+      // ✅ AGREGAR EL PARÁMETRO tipo EN LA URL
+      const url = `{{ route('cocinero.api.pedido', ':id') }}`.replace(':id', id) + '?tipo=' + tipo;
+      console.log('Fetching detalle desde:', url);
+      
+      const res = await fetch(url, {
         method: 'GET',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
@@ -302,24 +321,29 @@
       const data = await res.json();
       console.log('Detalle recibido:', data);
       
+      // ✅ ADAPTAR EL HTML SEGÚN EL TIPO
+      const esOrdenDirecta = data.tipo === 'orden';
+      
       const html = `
         <div class="row g-3">
           <div class="col-12">
-            <div class="alert alert-info mb-0">
+            <div class="alert ${esOrdenDirecta ? 'alert-secondary' : 'alert-info'} mb-0">
               <i class="bi bi-info-circle me-2"></i>
-              <strong>Pedido #${data.id}</strong> - Estado: <span class="badge bg-warning">${data.estado || '—'}</span>
+              <strong>Pedido #${data.id}</strong> 
+              ${esOrdenDirecta ? '<span class="badge bg-dark ms-2">Orden Directa</span>' : '<span class="badge bg-info ms-2">Reserva</span>'}
+              - Estado: <span class="badge bg-warning">${data.estado || '—'}</span>
             </div>
           </div>
           <div class="col-md-6">
             <div class="card h-100">
               <div class="card-body">
                 <h6 class="card-title text-primary">
-                  <i class="bi bi-person-circle me-2"></i>Información del Cliente
+                  <i class="bi bi-person-circle me-2"></i>${esOrdenDirecta ? 'Información de la Orden' : 'Información del Cliente'}
                 </h6>
                 <hr>
-                <p class="mb-2"><strong>Nombre:</strong> ${data.reserva?.cliente || '—'}</p>
+                <p class="mb-2"><strong>${esOrdenDirecta ? 'Tipo:' : 'Nombre:'}</strong> ${data.reserva?.cliente || '—'}</p>
                 <p class="mb-2"><strong>Mesa:</strong> ${data.reserva?.mesa ? 'Mesa '+data.reserva.mesa : '—'}</p>
-                <p class="mb-0"><strong>Personas:</strong> ${data.reserva?.personas || '—'}</p>
+                ${!esOrdenDirecta ? `<p class="mb-0"><strong>Personas:</strong> ${data.reserva?.personas || '—'}</p>` : ''}
               </div>
             </div>
           </div>
@@ -330,7 +354,7 @@
                   <i class="bi bi-clock-history me-2"></i>Detalles de Tiempo
                 </h6>
                 <hr>
-                <p class="mb-2"><strong>Hora de reserva:</strong> ${data.reserva?.hora || '—'}</p>
+                <p class="mb-2"><strong>${esOrdenDirecta ? 'Hora de apertura:' : 'Hora de reserva:'}</strong> ${data.reserva?.hora || '—'}</p>
                 <p class="mb-2"><strong>Creado:</strong> ${data.created_at ? new Date(data.created_at).toLocaleString('es-PE') : '—'}</p>
                 <p class="mb-0"><strong>Estado:</strong> <span class="badge bg-warning">${data.estado || '—'}</span></p>
               </div>
@@ -383,10 +407,10 @@
     }
   }
 
-  // Función para ejecutar acción
-  async function postAccion(url, boton){
+  // Función para ejecutar acción - CORREGIDA
+  async function postAccion(url, boton, tipo){
     try {
-      console.log('POST a:', url);
+      console.log('POST a:', url, 'tipo:', tipo);
       
       // Guardar contenido original del botón
       const contenidoOriginal = boton.innerHTML;
@@ -402,7 +426,7 @@
           'Accept': 'application/json'
         },
         credentials: 'same-origin',
-        body: JSON.stringify({})
+        body: JSON.stringify({ tipo: tipo }) // ✅ ENVIAR EL TIPO
       });
       
       console.log('Respuesta status:', res.status);
@@ -476,26 +500,38 @@
       tbody.innerHTML = payload.data.map(p => {
         // Determinar qué botones mostrar según el estado
         const botonesPendiente = `
-          <button class="btn btn-sm btn-info text-white btn-detalle" data-id="${p.id}" title="Ver detalle">
+          <button class="btn btn-sm btn-info text-white btn-detalle" 
+                  data-id="${p.id}" 
+                  data-tipo="${p.tipo}"
+                  title="Ver detalle">
             <i class="bi bi-eye-fill me-1"></i>Ver
           </button>
-          <button class="btn btn-sm btn-primary btn-preparar" data-id="${p.id}" title="Marcar en preparación">
+          <button class="btn btn-sm btn-primary btn-preparar" 
+                  data-id="${p.id}" 
+                  data-tipo="${p.tipo}"
+                  title="Marcar en preparación">
             <i class="bi bi-fire me-1"></i>Preparar
           </button>`;
         
         const botonesPreparacion = `
-          <button class="btn btn-sm btn-info text-white btn-detalle" data-id="${p.id}" title="Ver detalle">
+          <button class="btn btn-sm btn-info text-white btn-detalle" 
+                  data-id="${p.id}" 
+                  data-tipo="${p.tipo}"
+                  title="Ver detalle">
             <i class="bi bi-eye-fill me-1"></i>Ver
           </button>
-          <button class="btn btn-sm btn-success btn-preparado" data-id="${p.id}" title="Marcar como preparado">
+          <button class="btn btn-sm btn-success btn-preparado" 
+                  data-id="${p.id}" 
+                  data-tipo="${p.tipo}"
+                  title="Marcar como preparado">
             <i class="bi bi-check2 me-1"></i>Listo
           </button>`;
         
         const botones = p.estado === 'En preparación' ? botonesPreparacion : botonesPendiente;
-        const badge = p.estado === 'en_preparacion' ? '<span class="badge bg-info ms-2">En Preparación</span>' : '';
+        const tipoBadge = p.tipo === 'orden' ? '<span class="badge bg-secondary ms-2">Orden Directa</span>' : '';
         
         return `
-          <tr data-id="${p.id}" data-estado="${p.estado}">
+          <tr data-id="${p.id}" data-tipo="${p.tipo}" data-estado="${p.estado}">
             <td class="fw-bold">
               <i class="bi bi-clock text-muted me-1"></i>
               ${p.hora || '—'}
@@ -503,7 +539,10 @@
             <td>
               ${p.mesa ? `<span class="badge bg-dark"><i class="bi bi-table me-1"></i>Mesa ${p.mesa}</span>` : '<span class="text-muted">—</span>'}
             </td>
-            <td class="fw-semibold">${p.cliente || '—'}</td>
+            <td class="fw-semibold">
+              ${p.cliente || '—'}
+              ${tipoBadge}
+            </td>
             <td>
               <i class="bi bi-dish text-primary me-1"></i>
               ${p.plato || '—'}
@@ -513,7 +552,6 @@
             </td>
             <td>
               <small class="text-muted">${(p.notas || 'Sin observaciones').substring(0, 30)}${(p.notas && p.notas.length > 30) ? '...' : ''}</small>
-              ${badge}
             </td>
             <td class="text-center">
               <div class="btn-group" role="group">
@@ -528,7 +566,7 @@
     }
   }
 
-  // Delegación de eventos
+  // Delegación de eventos - CORREGIDA
   document.addEventListener('click', async (ev) => {
     const detalleBtn = ev.target.closest('.btn-detalle');
     const prepBtn = ev.target.closest('.btn-preparar');
@@ -537,13 +575,15 @@
     if (detalleBtn) {
       ev.preventDefault();
       const id = detalleBtn.getAttribute('data-id');
+      const tipo = detalleBtn.getAttribute('data-tipo') || 'reserva'; // ✅ OBTENER EL TIPO
+      
       if (!id) {
         console.error('No se encontró ID del pedido');
         return;
       }
       
-      console.log('Cargando detalle del pedido:', id);
-      await cargarDetalle(id);
+      console.log('Cargando detalle del pedido:', id, 'tipo:', tipo);
+      await cargarDetalle(id, tipo); // ✅ PASAR EL TIPO
       
       if (modal) {
         modal.show();
@@ -557,12 +597,14 @@
     if (prepBtn) {
       ev.preventDefault();
       const id = prepBtn.getAttribute('data-id');
+      const tipo = prepBtn.getAttribute('data-tipo') || 'reserva'; // ✅ OBTENER EL TIPO
+      
       if (!id) return;
       
-      console.log('Marcando pedido en preparación:', id);
+      console.log('Marcando pedido en preparación:', id, 'tipo:', tipo);
       
       const url = `{{ route('cocinero.pedidos.preparar', ':id') }}`.replace(':id', id);
-      const ok = await postAccion(url, prepBtn);
+      const ok = await postAccion(url, prepBtn, tipo); // ✅ PASAR EL TIPO
       
       if (ok) {
         refreshStats();
@@ -576,12 +618,14 @@
     if (listoBtn) {
       ev.preventDefault();
       const id = listoBtn.getAttribute('data-id');
+      const tipo = listoBtn.getAttribute('data-tipo') || 'reserva'; // ✅ OBTENER EL TIPO
+      
       if (!id) return;
       
-      console.log('Marcando pedido como preparado:', id);
+      console.log('Marcando pedido como preparado:', id, 'tipo:', tipo);
       
       const url = `{{ route('cocinero.pedidos.finalizar', ':id') }}`.replace(':id', id);
-      const ok = await postAccion(url, listoBtn);
+      const ok = await postAccion(url, listoBtn, tipo); // ✅ PASAR EL TIPO
       
       if (ok) {
         refreshStats();

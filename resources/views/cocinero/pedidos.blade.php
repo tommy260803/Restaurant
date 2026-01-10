@@ -1,3 +1,4 @@
+{{-- cocinero/pedidos.blade.php--}}
 @extends('layouts.plantilla')
 
 @section('title', 'Cocina - Pedidos')
@@ -29,6 +30,7 @@
     <table class="table table-sm align-middle">
       <thead>
         <tr>
+          <th>Tipo</th>
           <th>Hora</th>
           <th>Mesa</th>
           <th>Cliente</th>
@@ -42,10 +44,21 @@
       <tbody>
         @forelse($pedidos as $p)
           <tr>
+            <td>
+              @if($p->tipo === 'orden')
+                <span class="badge bg-primary" title="Orden directa">
+                  <i class="bi bi-receipt"></i> Directa
+                </span>
+              @else
+                <span class="badge bg-info" title="Pedido de reserva">
+                  <i class="bi bi-calendar-check"></i> Reserva
+                </span>
+              @endif
+            </td>
             <td>{{ $p->created_at?->format('H:i') }}</td>
-            <td>{{ $p->reserva?->mesa?->numero ? 'Mesa '.$p->reserva->mesa->numero : '—' }}</td>
-            <td>{{ $p->reserva?->nombre_cliente ?? '—' }}</td>
-            <td>{{ $p->plato?->nombre ?? '—' }}</td>
+            <td>{{ $p->mesa_numero ? 'Mesa '.$p->mesa_numero : '—' }}</td>
+            <td>{{ $p->cliente ?? '—' }}</td>
+            <td>{{ ($p->tipo === 'orden' ? $p->plato?->nombre : $p->plato?->nombre) ?? '—' }}</td>
             <td class="text-center">{{ $p->cantidad }}</td>
             <td>
               @if($p->estado==='Enviado a cocina')
@@ -56,21 +69,29 @@
                 <span class="badge bg-success">{{ $p->estado }}</span>
               @endif
             </td>
-            <td>{{ $p->notas ?? '—' }}</td>
+            <td>{{ $p->notas ?: '—' }}</td>
             <td class="text-end">
               <div class="btn-group btn-group-sm">
-                <a href="{{ route('cocinero.pedidos.detalle', $p->id) }}" class="btn btn-outline-secondary" title="Detalle"><i class="bi bi-eye"></i></a>
+                <a href="{{ route('cocinero.pedidos.detalle', $p->id) }}?tipo={{ $p->tipo }}" class="btn btn-outline-secondary" title="Detalle"><i class="bi bi-eye"></i></a>
                 @if($p->estado==='Enviado a cocina')
-                  <form action="{{ route('cocinero.pedidos.preparar', $p->id) }}" method="POST">@csrf<button class="btn btn-outline-primary" title="En preparación"><i class="bi bi-fire"></i></button></form>
+                  <form action="{{ route('cocinero.pedidos.preparar', $p->id) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="tipo" value="{{ $p->tipo }}">
+                    <button class="btn btn-outline-primary" title="En preparación"><i class="bi bi-fire"></i></button>
+                  </form>
                 @endif
                 @if($p->estado!=='Preparado')
-                  <form action="{{ route('cocinero.pedidos.finalizar', $p->id) }}" method="POST">@csrf<button class="btn btn-outline-success" title="Preparado"><i class="bi bi-check2"></i></button></form>
+                  <form action="{{ route('cocinero.pedidos.finalizar', $p->id) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="tipo" value="{{ $p->tipo }}">
+                    <button class="btn btn-outline-success" title="Preparado"><i class="bi bi-check2"></i></button>
+                  </form>
                 @endif
               </div>
             </td>
           </tr>
         @empty
-          <tr><td colspan="8" class="text-center text-muted py-4">No hay pedidos</td></tr>
+          <tr><td colspan="9" class="text-center text-muted py-4">No hay pedidos</td></tr>
         @endforelse
       </tbody>
     </table>

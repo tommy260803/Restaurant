@@ -1,3 +1,4 @@
+{{-- cocinero/historial.blade.php--}}
 @extends('layouts.plantilla')
 
 @section('title', 'Cocina - Historial')

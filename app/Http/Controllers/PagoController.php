@@ -173,6 +173,11 @@ class PagoController extends Controller
                 // 2) Marcar la reserva como confirmada
                 $pago->reserva->update(['estado' => 'confirmada']);
 
+                if ($pago->reserva->mesa_id) {
+                    Mesa::where('id', $pago->reserva->mesa_id)
+                        ->update(['estado' => 'reservada']);
+                }
+                
                 // 3) Enviar correo de confirmación si hay email
                 try {
                     if (! empty($pago->reserva->email)) {

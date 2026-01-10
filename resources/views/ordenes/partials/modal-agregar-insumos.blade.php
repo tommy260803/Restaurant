@@ -1,3 +1,4 @@
+{{-- ordenes/partials/modal-agregar-insumos.blade.php--}}
 {{-- Modal: Agregar Insumos/Platos --}}
 <div class="modal fade" id="modalAgregarInsumos" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">

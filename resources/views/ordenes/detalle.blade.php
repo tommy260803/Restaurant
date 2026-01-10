@@ -1,3 +1,4 @@
+{{-- ordenes/detalle.blade.php--}}
 @extends('layouts.plantilla')
 
 @section('title', 'Mesa #' . $mesa->numero . ' - Detalle de Orden')
@@ -7,9 +8,30 @@
     
     {{-- Header con título --}}
     <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="text-white mb-2">Mesa #{{ $mesa->numero }}</h2>
-            <p style="color: #b8b8d1;">Gestiona los platos de esta orden</p>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="text-white mb-2">
+                    Mesa #{{ $mesa->numero }}
+                    
+                    @if($esReserva ?? false)
+                        <span class="badge ms-2" style="background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%); color: #000; font-size: 0.7rem;">
+                            <i class="bi bi-calendar-check me-1"></i>RESERVA
+                        </span>
+                    @endif
+                </h2>
+                <p style="color: #b8b8d1;">Gestiona los platos de esta orden</p>
+            </div>
+            
+            @if($esReserva && isset($reserva))
+                <div class="alert alert-info mb-0 py-2" style="background-color: rgba(23, 162, 184, 0.2); border-color: #17a2b8;">
+                    <small style="color: #17a2b8;">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <strong>{{ $reserva->nombre_cliente }}</strong><br>
+                        <i class="bi bi-clock me-1"></i>
+                        Reserva: {{ \Carbon\Carbon::parse($reserva->hora_reserva)->format('g:i A') }}
+                    </small>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -18,6 +40,14 @@
         <div class="col-lg-8 col-md-7 mb-4">
             <div class="card" style="background-color: #2d2d44; border: 1px solid #3a3a54;">
                 <div class="card-body">
+                    
+                    @if($esReserva ?? false)
+                        <div class="alert alert-success mb-3" style="background-color: rgba(40, 167, 69, 0.2); border-color: #28a745; color: #28a745;">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Platos pre-ordenados cargados automáticamente</strong>
+                            <p class="mb-0 small">Estos platos fueron seleccionados al hacer la reserva. Puedes agregar más o modificar cantidades.</p>
+                        </div>
+                    @endif
                     
                     {{-- Tabla de platos --}}
                     <div class="table-responsive">
@@ -33,10 +63,17 @@
                                 </tr>
                             </thead>
                             <tbody id="tbody-platos">
-                                @forelse($orden['platos'] ?? [] as $plato)
-                                    <tr data-plato-id="{{ $plato['id'] }}">
-                                        <td style="color: #e8e8f0;">{{ $plato['nombre'] }}</td>
-                                        <td style="color: #e8e8f0;">${{ number_format($plato['precio'], 2) }}</td>
+                                @forelse($orden->platos ?? [] as $ordenPlato)
+                                    <tr data-plato-id="{{ $ordenPlato->id }}">
+                                        <td style="color: #e8e8f0;">
+                                            {{ $ordenPlato->plato->nombre ?? 'Plato eliminado' }}
+                                            @if($esReserva ?? false)
+                                                <span class="badge badge-sm ms-2" style="background-color: #28a745; font-size: 0.65rem;">
+                                                    <i class="bi bi-calendar-check"></i> Pre-orden
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td style="color: #e8e8f0;">${{ number_format($ordenPlato->precio_unitario, 2) }}</td>
                                         <td>
                                             <div class="input-group input-group-sm">
                                                 <button class="btn btn-outline-secondary btn-cantidad-menos" type="button" style="background-color: #dc3545; border-color: #dc3545; color: #fff;">
@@ -44,7 +81,7 @@
                                                 </button>
                                                 <input type="number" 
                                                        class="form-control text-center input-cantidad" 
-                                                       value="{{ $plato['cantidad'] }}" 
+                                                       value="{{ $ordenPlato->cantidad }}" 
                                                        min="1" 
                                                        max="50"
                                                        style="background-color: #3a3a54; color: #fff; border-color: #3a3a54;">
@@ -54,7 +91,7 @@
                                             </div>
                                         </td>
                                         <td class="subtotal" style="color: #e8e8f0;">
-                                            ${{ number_format($plato['precio'] * $plato['cantidad'], 2) }}
+                                            ${{ number_format($ordenPlato->subtotal, 2) }}
                                         </td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-info btn-nota" 
@@ -63,12 +100,12 @@
                                                     style="background-color: #17a2b8; border-color: #17a2b8; color: #fff;">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
-                                            @if($plato['nota'])
+                                            @if($ordenPlato->notas)
                                                 <small class="text-info d-block mt-1" 
-                                                       data-nota-completa="{{ $plato['nota'] }}" 
+                                                       data-nota-completa="{{ $ordenPlato->notas }}" 
                                                        style="cursor: help;" 
-                                                       title="{{ $plato['nota'] }}">
-                                                    {{ Str::limit($plato['nota'], 30) }}
+                                                       title="{{ $ordenPlato->notas }}">
+                                                    {{ Str::limit($ordenPlato->notas, 30) }}
                                                 </small>
                                             @endif
                                         </td>
@@ -132,18 +169,25 @@
                         <button type="submit" 
                                 class="btn btn-success btn-lg w-100"
                                 id="btn-cobrar"
-                                {{ empty($orden['platos']) ? 'disabled' : '' }}>
+                                {{ $orden->platos->isEmpty() ? 'disabled' : '' }}>
                             <i class="bi bi-cash-coin me-2"></i>Cobrar
                         </button>
                     </form>
 
                     <div class="mt-4 text-start">
                         <p class="small mb-1" style="color: #b8b8d1;">
-                            <i class="bi bi-receipt me-2"></i>Items: <span id="cantidad-items">{{ count($orden['platos'] ?? []) }}</span>
+                            <i class="bi bi-receipt me-2"></i>Items: <span id="cantidad-items">{{ $orden->platos->count() }}</span>
                         </p>
                         <p class="small mb-0" style="color: #b8b8d1;">
-                            <i class="bi bi-clock me-2"></i>Apertura: {{ \Carbon\Carbon::parse($orden['fecha_apertura'] ?? now())->format('h:i A') }}
+                            <i class="bi bi-clock me-2"></i>Apertura: {{ $orden->fecha_apertura->format('h:i A') }}
                         </p>
+                        
+                        @if($esReserva ?? false)
+                            <p class="small mb-0 mt-2" style="color: #17a2b8;">
+                                <i class="bi bi-calendar-check me-2"></i>
+                                <strong>Orden de Reserva</strong>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -179,6 +223,15 @@
     .input-cantidad::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
+    }
+
+    .badge[style*="linear-gradient"] {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
     }
 </style>
 @endpush

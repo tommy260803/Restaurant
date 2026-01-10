@@ -1,3 +1,4 @@
+{{-- ordenes/partials/modal-nota.blade.php--}}
 {{-- Modal: Agregar/Editar Nota --}}
 <div class="modal fade" id="modalNota" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

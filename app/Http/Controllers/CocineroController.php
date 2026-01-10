@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pedido;
+use App\Models\OrdenPlato;
 use App\Models\Reserva;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CocineroController extends Controller
 {
@@ -14,68 +16,124 @@ class CocineroController extends Controller
     {
         $hoy = Carbon::today();
         
-        // Contar pedidos de hoy en adelante (incluyendo futuras)
-        $pendientes = Pedido::whereHas('reserva', function($q) use ($hoy) {
+        // Contar pedidos de RESERVAS
+        $pendientesReserva = Pedido::whereHas('reserva', function($q) use ($hoy) {
             $q->whereDate('fecha_reserva', '>=', $hoy);
         })->where('estado', 'Enviado a cocina')->count();
         
-        $enPrep = Pedido::whereHas('reserva', function($q) use ($hoy) {
+        $enPrepReserva = Pedido::whereHas('reserva', function($q) use ($hoy) {
             $q->whereDate('fecha_reserva', '>=', $hoy);
         })->where('estado', 'En preparación')->count();
         
-        $preparados = Pedido::whereHas('reserva', function($q) use ($hoy) {
+        $preparadosReserva = Pedido::whereHas('reserva', function($q) use ($hoy) {
             $q->whereDate('fecha_reserva', $hoy);
         })->where('estado', 'Preparado')->count();
 
-        // Primeros pedidos pendientes
-        $pedidos = Pedido::with(['reserva.mesa', 'plato'])
-            ->whereHas('reserva', function($q) use ($hoy) {
-                $q->whereDate('fecha_reserva', '>=', $hoy);
-            })
-            ->where('estado', 'Enviado a cocina')
-            ->orderBy('created_at')
-            ->limit(10)
-            ->get();
+        // Contar pedidos de ÓRDENES DIRECTAS
+        $pendientesOrden = OrdenPlato::whereHas('orden', function($q) {
+            $q->where('estado', 'abierta');
+        })->where('estado_cocina', 'Enviado a cocina')->count();
+        
+        $enPrepOrden = OrdenPlato::whereHas('orden', function($q) {
+            $q->where('estado', 'abierta');
+        })->where('estado_cocina', 'En preparación')->count();
+        
+        $preparadosOrden = OrdenPlato::whereHas('orden', function($q) use ($hoy) {
+            $q->where('estado', 'abierta')
+              ->whereDate('fecha_apertura', $hoy);
+        })->where('estado_cocina', 'Preparado')->count();
+
+        // Totales combinados
+        $pendientes = $pendientesReserva + $pendientesOrden;
+        $enPrep = $enPrepReserva + $enPrepOrden;
+        $preparados = $preparadosReserva + $preparadosOrden;
+
+        // Obtener pedidos pendientes UNIFICADOS (reservas + órdenes)
+        $pedidos = $this->obtenerPedidosUnificados('Enviado a cocina', 10);
 
         return view('cocinero.index', compact('pendientes', 'enPrep', 'preparados', 'pedidos'));
     }
 
     public function pedidosPendientes(Request $request)
     {
-        $estado = $request->input('estado', 'Enviado a cocina');
-        $hoy = Carbon::today();
+        $estado = $request->input('estado'); // puede ser null o ''
 
-        $query = Pedido::with(['reserva.mesa', 'plato'])
-            ->whereHas('reserva', function($q) use ($hoy) {
-                $q->whereDate('fecha_reserva', '>=', $hoy);
-            })
-            ->orderBy('created_at');
-
-        if ($estado) {
-            $query->where('estado', $estado);
-        }
-
-        $pedidos = $query->paginate(20)->appends($request->query());
+        $pedidos = $this->obtenerPedidosUnificadosPaginados(
+            $estado ?: null,
+            20
+        );
 
         return view('cocinero.pedidos', compact('pedidos', 'estado'));
+
     }
 
-    public function detalle($id)
+    public function detalle(Request $request, $id)
     {
-        $pedido = Pedido::with(['reserva.mesa', 'plato'])
-            ->findOrFail($id);
+        $tipo = $request->query('tipo', 'reserva');
+
+        if ($tipo === 'orden') {
+            // Obtener el plato de la orden con todas sus relaciones
+            $op = OrdenPlato::with(['orden.mesa', 'plato'])->findOrFail($id);
+
+            $pedido = (object)[
+                'id' => $op->id,
+                'tipo' => 'orden',
+                'mesa_numero' => optional($op->orden->mesa)->numero ?? '—',
+                'cliente_nombre' => 'Orden Directa',
+                'personas' => '—',
+                'hora_ingreso' => optional($op->orden->fecha_apertura)->format('H:i') ?? '—',
+                'estado' => $op->estado_cocina,
+                'plato_nombre' => optional($op->plato)->nombre ?? '—',
+                'plato_descripcion' => optional($op->plato)->descripcion ?? '',
+                'cantidad' => $op->cantidad,
+                'precio' => $op->precio_unitario,
+                'notas' => $op->notas ?? '',
+            ];
+
+        } else {
+            // Obtener el pedido de reserva con todas sus relaciones
+            $p = Pedido::with(['reserva.mesa', 'plato'])->findOrFail($id);
+
+            $pedido = (object)[
+                'id' => $p->id,
+                'tipo' => 'reserva',
+                'mesa_numero' => optional($p->reserva->mesa)->numero ?? '—',
+                'cliente_nombre' => optional($p->reserva)->nombre_cliente ?? '—',
+                'personas' => optional($p->reserva)->numero_personas ?? '—',
+                'hora_ingreso' => optional($p->created_at)->format('H:i') ?? '—',
+                'estado' => $p->estado,
+                'plato_nombre' => optional($p->plato)->nombre ?? '—',
+                'plato_descripcion' => optional($p->plato)->descripcion ?? '',
+                'cantidad' => $p->cantidad,
+                'precio' => $p->precio,
+                'notas' => $p->notas ?? '',
+            ];
+        }
+
         return view('cocinero.detalle', compact('pedido'));
     }
+
+
+
 
     public function marcarPreparacion($id)
     {
         try {
-            $pedido = Pedido::findOrFail($id);
+            $tipo = request()->input('tipo', 'reserva');
             
-            $pedido->update([
-                'estado' => 'En preparación',
-                'en_preparacion_at' => now(),
-            ]);
+            if ($tipo === 'orden') {
+                $pedido = OrdenPlato::findOrFail($id);
+                $pedido->update([
+                    'estado_cocina' => 'En preparación',
+                    'en_preparacion_at' => now(),
+                ]);
+            } else {
+                $pedido = Pedido::findOrFail($id);
+                $pedido->update([
+                    'estado' => 'En preparación',
+                    'en_preparacion_at' => now(),
+                ]);
+            }
             
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -83,7 +141,8 @@ class CocineroController extends Controller
                     'message' => 'Pedido marcado como En preparación',
                     'pedido' => [
                         'id' => $pedido->id,
-                        'estado' => $pedido->estado
+                        'estado' => $tipo === 'orden' ? $pedido->estado_cocina : $pedido->estado,
+                        'tipo' => $tipo
                     ]
                 ]);
             }
@@ -107,12 +166,21 @@ class CocineroController extends Controller
     public function marcarPreparado($id)
     {
         try {
-            $pedido = Pedido::findOrFail($id);
+            $tipo = request()->input('tipo', 'reserva');
             
-            $pedido->update([
-                'estado' => 'Preparado',
-                'preparado_at' => now(),
-            ]);
+            if ($tipo === 'orden') {
+                $pedido = OrdenPlato::findOrFail($id);
+                $pedido->update([
+                    'estado_cocina' => 'Preparado',
+                    'preparado_at' => now(),
+                ]);
+            } else {
+                $pedido = Pedido::findOrFail($id);
+                $pedido->update([
+                    'estado' => 'Preparado',
+                    'preparado_at' => now(),
+                ]);
+            }
             
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
@@ -120,7 +188,8 @@ class CocineroController extends Controller
                     'message' => 'Pedido marcado como Preparado',
                     'pedido' => [
                         'id' => $pedido->id,
-                        'estado' => $pedido->estado
+                        'estado' => $tipo === 'orden' ? $pedido->estado_cocina : $pedido->estado,
+                        'tipo' => $tipo
                     ]
                 ]);
             }
@@ -145,18 +214,24 @@ class CocineroController extends Controller
     {
         $data = $request->validate([
             'notas' => 'required|string|max:1000',
+            'tipo' => 'nullable|string|in:reserva,orden'
         ]);
         
-        $pedido = Pedido::findOrFail($id);
-        $pedido->update([
-            'notas' => $data['notas'],
-        ]);
+        $tipo = $data['tipo'] ?? 'reserva';
+        
+        if ($tipo === 'orden') {
+            $pedido = OrdenPlato::findOrFail($id);
+        } else {
+            $pedido = Pedido::findOrFail($id);
+        }
+        
+        $pedido->update(['notas' => $data['notas']]);
         
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Incidencia registrada']);
         }
         
-        return back()->with('success', 'Incidencia registrada');
+        return back()->with('success', 'Incidencia registrada correctamente');
     }
 
     public function historial(Request $request)
@@ -164,53 +239,186 @@ class CocineroController extends Controller
         $desde = $request->input('desde');
         $hasta = $request->input('hasta');
 
-        $query = Pedido::with(['reserva.mesa', 'plato'])
-            ->where('estado', 'Preparado')
-            ->orderBy('preparado_at', 'desc');
+        // ===== RESERVAS =====
+        $queryReserva = Pedido::with(['reserva.mesa', 'plato'])
+            ->where('estado', 'Preparado');
 
-        if (!empty($desde)) {
-            $query->whereDate('preparado_at', '>=', $desde);
+        if ($desde) {
+            $queryReserva->whereDate('preparado_at', '>=', $desde);
         }
-        if (!empty($hasta)) {
-            $query->whereDate('preparado_at', '<=', $hasta);
+        if ($hasta) {
+            $queryReserva->whereDate('preparado_at', '<=', $hasta);
         }
 
-        $pedidos = $query->paginate(20)->appends($request->query());
+        $pedidosReserva = $queryReserva->get()->map(function ($p) {
+            $p->tipo = 'reserva';
+            return $p;
+        });
+
+        // ===== ÓRDENES DIRECTAS =====
+        $queryOrden = OrdenPlato::with(['orden.mesa', 'plato'])
+            ->where('estado_cocina', 'Preparado');
+
+        if ($desde) {
+            $queryOrden->whereDate('preparado_at', '>=', $desde);
+        }
+        if ($hasta) {
+            $queryOrden->whereDate('preparado_at', '<=', $hasta);
+        }
+
+        $pedidosOrden = $queryOrden->get()->map(function ($p) {
+            $p->tipo = 'orden';
+            return $p;
+        });
+
+        // ===== UNIFICAR =====
+        $todos = $pedidosReserva
+            ->concat($pedidosOrden)
+            ->sortByDesc('preparado_at')
+            ->values();
+
+        // ===== PAGINACIÓN MANUAL =====
+        $perPage = 10;
+        $page = request()->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+
+        $pedidos = new \Illuminate\Pagination\LengthAwarePaginator(
+            $todos->slice($offset, $perPage),
+            $todos->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query()
+            ]
+        );
 
         return view('cocinero.historial', compact('pedidos', 'desde', 'hasta'));
     }
+
 
     // ====== API ligera para auto-actualización ======
     public function stats()
     {
         $today = Carbon::today();
         
-        $base = Pedido::query()->whereHas('reserva', function($q) use ($today) {
+        // Reservas
+        $baseReserva = Pedido::query()->whereHas('reserva', function($q) use ($today) {
             $q->whereDate('fecha_reserva', '>=', $today);
         });
         
+        $pendientesReserva = (clone $baseReserva)->where('estado', 'Enviado a cocina')->count();
+        $enPrepReserva = (clone $baseReserva)->where('estado', 'En preparación')->count();
+        $preparadosReserva = (clone $baseReserva)->whereDate('preparado_at', $today)->where('estado', 'Preparado')->count();
+        
+        // Órdenes directas
+        $pendientesOrden = OrdenPlato::whereHas('orden', function($q) {
+            $q->where('estado', 'abierta');
+        })->where('estado_cocina', 'Enviado a cocina')->count();
+        
+        $enPrepOrden = OrdenPlato::whereHas('orden', function($q) {
+            $q->where('estado', 'abierta');
+        })->where('estado_cocina', 'En preparación')->count();
+        
+        $preparadosOrden = OrdenPlato::whereHas('orden', function($q) use ($today) {
+            $q->where('estado', 'abierta')->whereDate('fecha_apertura', $today);
+        })->where('estado_cocina', 'Preparado')->count();
+        
         return response()->json([
-            'pendientes' => (clone $base)->where('estado', 'Enviado a cocina')->count(),
-            'en_preparacion' => (clone $base)->where('estado', 'En preparación')->count(),
-            'preparados' => (clone $base)->whereDate('preparado_at', $today)->where('estado', 'Preparado')->count(),
+            'pendientes' => $pendientesReserva + $pendientesOrden,
+            'en_preparacion' => $enPrepReserva + $enPrepOrden,
+            'preparados' => $preparadosReserva + $preparadosOrden,
         ]);
     }
 
     public function pendientesRecientes()
     {
-        $today = Carbon::today();
+        $pedidos = $this->obtenerPedidosUnificados(['Enviado a cocina', 'En preparación'], 10);
+        return response()->json(['data' => $pedidos]);
+    }
+
+    public function detalleJson($id)
+    {
+        $tipo = request()->input('tipo', 'reserva');
         
-        $items = Pedido::with(['reserva.mesa', 'plato'])
-            ->whereIn('estado', ['Enviado a cocina', 'En preparación'])
-            ->whereHas('reserva', function($q) use ($today) { 
-                $q->whereDate('fecha_reserva', '>=', $today); 
+        if ($tipo === 'orden') {
+            $pedido = OrdenPlato::with(['orden.mesa', 'plato'])->findOrFail($id);
+            
+            return response()->json([
+                'id' => $pedido->id,
+                'tipo' => 'orden',
+                'estado' => $pedido->estado_cocina,
+                'created_at' => optional($pedido->created_at)->toDateTimeString(),
+                'en_preparacion_at' => optional($pedido->en_preparacion_at)->toDateTimeString(),
+                'preparado_at' => optional($pedido->preparado_at)->toDateTimeString(),
+                'notas' => $pedido->notas ?? '',
+                'cantidad' => $pedido->cantidad,
+                'precio' => $pedido->precio_unitario,
+                'plato' => [
+                    'nombre' => optional($pedido->plato)->nombre ?? '—',
+                    'descripcion' => optional($pedido->plato)->descripcion ?? '',
+                ],
+                'reserva' => [
+                    'cliente' => 'Orden Directa',
+                    'personas' => '—',
+                    'mesa' => optional($pedido->orden->mesa)->numero ?? '—',
+                    'hora' => optional($pedido->orden->fecha_apertura)->format('H:i') ?? '—',
+                ],
+            ]);
+        } else {
+            $pedido = Pedido::with(['reserva.mesa', 'plato'])->findOrFail($id);
+            
+            return response()->json([
+                'id' => $pedido->id,
+                'tipo' => 'reserva',
+                'estado' => $pedido->estado,
+                'created_at' => optional($pedido->created_at)->toDateTimeString(),
+                'en_preparacion_at' => optional($pedido->en_preparacion_at)->toDateTimeString(),
+                'preparado_at' => optional($pedido->preparado_at)->toDateTimeString(),
+                'notas' => $pedido->notas ?? '',
+                'cantidad' => $pedido->cantidad,
+                'precio' => $pedido->precio,
+                'plato' => [
+                    'nombre' => optional($pedido->plato)->nombre ?? '—',
+                    'descripcion' => optional($pedido->plato)->descripcion ?? '',
+                ],
+                'reserva' => [
+                    'cliente' => optional($pedido->reserva)->nombre_cliente ?? '—',
+                    'personas' => optional($pedido->reserva)->numero_personas ?? '—',
+                    'mesa' => optional(optional($pedido->reserva)->mesa)->numero ?? '—',
+                    'hora' => optional($pedido->reserva)->hora_reserva ?? '—',
+                ],
+            ]);
+        }
+    }
+
+    // ============================================
+    // MÉTODOS AUXILIARES PRIVADOS
+    // ============================================
+
+    /**
+     * Obtener pedidos unificados (reservas + órdenes) con límite
+     */
+    private function obtenerPedidosUnificados($estados, $limit = 10)
+    {
+        if (!is_array($estados)) {
+            $estados = [$estados];
+        }
+
+        $hoy = Carbon::today();
+        
+        // Pedidos de reservas
+        $pedidosReserva = Pedido::with(['reserva.mesa', 'plato'])
+            ->whereHas('reserva', function($q) use ($hoy) {
+                $q->whereDate('fecha_reserva', '>=', $hoy);
             })
+            ->whereIn('estado', $estados)
             ->orderBy('created_at')
-            ->limit(10)
             ->get()
             ->map(function($p){
                 return [
                     'id' => $p->id,
+                    'tipo' => 'reserva',
                     'estado' => $p->estado,
                     'hora' => optional($p->created_at)->format('H:i'),
                     'mesa' => optional(optional($p->reserva)->mesa)->numero,
@@ -218,35 +426,110 @@ class CocineroController extends Controller
                     'plato' => optional($p->plato)->nombre,
                     'cantidad' => $p->cantidad,
                     'notas' => $p->notas,
+                    'created_at' => $p->created_at,
                 ];
             });
 
-        return response()->json(['data' => $items]);
+        // Pedidos de órdenes directas
+        $estadosCocina = array_map(function($e) {
+            return $e; // Ya vienen en el formato correcto
+        }, $estados);
+
+        $pedidosOrden = OrdenPlato::with(['orden.mesa', 'plato'])
+            ->whereHas('orden', function($q) {
+                $q->where('estado', 'abierta');
+            })
+            ->whereIn('estado_cocina', $estadosCocina)
+            ->orderBy('created_at')
+            ->get()
+            ->map(function($p){
+                return [
+                    'id' => $p->id,
+                    'tipo' => 'orden',
+                    'estado' => $p->estado_cocina,
+                    'hora' => optional($p->created_at)->format('H:i'),
+                    'mesa' => optional(optional($p->orden)->mesa)->numero,
+                    'cliente' => 'Orden Directa',
+                    'plato' => optional($p->plato)->nombre,
+                    'cantidad' => $p->cantidad,
+                    'notas' => $p->notas,
+                    'created_at' => $p->created_at,
+                ];
+            });
+
+        // Combinar, ordenar por fecha y limitar
+        return $pedidosReserva->concat($pedidosOrden)
+            ->sortBy('created_at')
+            ->take($limit)
+            ->values()
+            ->toArray();
     }
 
-    public function detalleJson($id)
+    /**
+     * Obtener pedidos unificados paginados
+     */
+    private function obtenerPedidosUnificadosPaginados($estado = null, $perPage = 20)
     {
-        $pedido = Pedido::with(['reserva.mesa', 'plato'])->findOrFail($id);
-        
-        return response()->json([
-            'id' => $pedido->id,
-            'estado' => $pedido->estado,
-            'created_at' => optional($pedido->created_at)->toDateTimeString(),
-            'en_preparacion_at' => optional($pedido->en_preparacion_at)->toDateTimeString(),
-            'preparado_at' => optional($pedido->preparado_at)->toDateTimeString(),
-            'notas' => $pedido->notas,
-            'cantidad' => $pedido->cantidad,
-            'precio' => $pedido->precio,
-            'plato' => [
-                'nombre' => optional($pedido->plato)->nombre,
-                'descripcion' => optional($pedido->plato)->descripcion,
-            ],
-            'reserva' => [
-                'cliente' => optional($pedido->reserva)->nombre_cliente,
-                'personas' => optional($pedido->reserva)->numero_personas,
-                'mesa' => optional(optional($pedido->reserva)->mesa)->numero,
-                'hora' => optional($pedido->reserva)->hora_reserva,
-            ],
-        ]);
+        $hoy = Carbon::today();
+
+        // ===== RESERVAS =====
+        $queryReserva = Pedido::with(['reserva.mesa', 'plato'])
+            ->whereHas('reserva', function($q) use ($hoy) {
+                $q->whereDate('fecha_reserva', '>=', $hoy);
+            });
+
+        if ($estado) {
+            $queryReserva->where('estado', $estado);
+        }
+
+        $pedidosReserva = $queryReserva
+            ->orderBy('created_at')
+            ->get()
+            ->map(function($p) {
+                $p->tipo = 'reserva';
+                $p->mesa_numero = optional(optional($p->reserva)->mesa)->numero;
+                $p->cliente = optional($p->reserva)->nombre_cliente;
+                return $p;
+            });
+
+        // ===== ÓRDENES DIRECTAS =====
+        $queryOrden = OrdenPlato::with(['orden.mesa', 'plato'])
+            ->whereHas('orden', function($q) {
+                $q->where('estado', 'abierta');
+            });
+
+        if ($estado) {
+            $queryOrden->where('estado_cocina', $estado);
+        }
+
+        $pedidosOrden = $queryOrden
+            ->orderBy('created_at')
+            ->get()
+            ->map(function($p) {
+                $p->tipo = 'orden';
+                $p->mesa_numero = optional(optional($p->orden)->mesa)->numero;
+                $p->cliente = 'Orden Directa';
+                $p->estado = $p->estado_cocina; // normalizar
+                return $p;
+            });
+
+        // ===== COMBINAR =====
+        $todosPedidos = $pedidosReserva
+            ->concat($pedidosOrden)
+            ->sortByDesc('created_at')
+            ->values();
+
+        // ===== PAGINACIÓN MANUAL =====
+        $page = request()->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $todosPedidos->slice($offset, $perPage),
+            $todosPedidos->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
     }
+
 }
