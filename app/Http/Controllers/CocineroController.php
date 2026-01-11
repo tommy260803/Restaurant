@@ -75,11 +75,30 @@ class CocineroController extends Controller
             // Obtener el plato de la orden con todas sus relaciones
             $op = OrdenPlato::with(['orden.mesa', 'plato'])->findOrFail($id);
 
+            $nombreCliente = 'Orden Directa';
+            if ($op->orden && $op->orden->mesa) {
+                $ahora = \Carbon\Carbon::now();
+                $reservaActiva = $op->orden->mesa->reservas()
+                    ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                    ->whereDate('fecha_reserva', $ahora->toDateString())
+                    ->get()
+                    ->first(function($reserva) use ($ahora) {
+                        $horaReserva = \Carbon\Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                        $inicioReserva = $horaReserva->copy();
+                        $finVentana = $horaReserva->copy()->addHours(3);
+                        return $ahora->between($inicioReserva, $finVentana);
+                    });
+                
+                if ($reservaActiva) {
+                    $nombreCliente = $reservaActiva->nombre_cliente ?? 'Orden Directa';
+                }
+            }
+
             $pedido = (object)[
                 'id' => $op->id,
                 'tipo' => 'orden',
                 'mesa_numero' => optional($op->orden->mesa)->numero ?? '—',
-                'cliente_nombre' => 'Orden Directa',
+                'cliente_nombre' => $nombreCliente,
                 'personas' => '—',
                 'hora_ingreso' => optional($op->orden->fecha_apertura)->format('H:i') ?? '—',
                 'estado' => $op->estado_cocina,
@@ -344,6 +363,26 @@ class CocineroController extends Controller
         if ($tipo === 'orden') {
             $pedido = OrdenPlato::with(['orden.mesa', 'plato'])->findOrFail($id);
             
+            // ✅ CORRECCIÓN: Obtener nombre del cliente si hay reserva activa
+            $nombreCliente = 'Orden Directa';
+            if ($pedido->orden && $pedido->orden->mesa) {
+                $ahora = \Carbon\Carbon::now();
+                $reservaActiva = $pedido->orden->mesa->reservas()
+                    ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                    ->whereDate('fecha_reserva', $ahora->toDateString())
+                    ->get()
+                    ->first(function($reserva) use ($ahora) {
+                        $horaReserva = \Carbon\Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                        $inicioReserva = $horaReserva->copy();
+                        $finVentana = $horaReserva->copy()->addHours(3);
+                        return $ahora->between($inicioReserva, $finVentana);
+                    });
+                
+                if ($reservaActiva) {
+                    $nombreCliente = $reservaActiva->nombre_cliente ?? 'Orden Directa';
+                }
+            }
+
             return response()->json([
                 'id' => $pedido->id,
                 'tipo' => 'orden',
@@ -359,7 +398,7 @@ class CocineroController extends Controller
                     'descripcion' => optional($pedido->plato)->descripcion ?? '',
                 ],
                 'reserva' => [
-                    'cliente' => 'Orden Directa',
+                    'cliente' => $nombreCliente,
                     'personas' => '—',
                     'mesa' => optional($pedido->orden->mesa)->numero ?? '—',
                     'hora' => optional($pedido->orden->fecha_apertura)->format('H:i') ?? '—',
@@ -443,13 +482,33 @@ class CocineroController extends Controller
             ->orderBy('created_at')
             ->get()
             ->map(function($p){
-                return [
-                    'id' => $p->id,
-                    'tipo' => 'orden',
-                    'estado' => $p->estado_cocina,
-                    'hora' => optional($p->created_at)->format('H:i'),
-                    'mesa' => optional(optional($p->orden)->mesa)->numero,
-                    'cliente' => 'Orden Directa',
+            // ✅ CORRECCIÓN: Obtener nombre del cliente si hay reserva activa
+            $nombreCliente = 'Orden Directa';
+            if ($p->orden && $p->orden->mesa) {
+                $ahora = \Carbon\Carbon::now();
+                $reservaActiva = $p->orden->mesa->reservas()
+                    ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                    ->whereDate('fecha_reserva', $ahora->toDateString())
+                    ->get()
+                    ->first(function($reserva) use ($ahora) {
+                        $horaReserva = \Carbon\Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                        $inicioReserva = $horaReserva->copy();
+                        $finVentana = $horaReserva->copy()->addHours(3);
+                        return $ahora->between($inicioReserva, $finVentana);
+                    });
+                
+                if ($reservaActiva) {
+                    $nombreCliente = $reservaActiva->nombre_cliente ?? 'Orden Directa';
+                }
+            }
+            
+            return [
+                'id' => $p->id,
+                'tipo' => 'orden',
+                'estado' => $p->estado_cocina,
+                'hora' => optional($p->created_at)->format('H:i'),
+                'mesa' => optional(optional($p->orden)->mesa)->numero,
+                'cliente' => $nombreCliente,
                     'plato' => optional($p->plato)->nombre,
                     'cantidad' => $p->cantidad,
                     'notas' => $p->notas,
@@ -503,15 +562,36 @@ class CocineroController extends Controller
         }
 
         $pedidosOrden = $queryOrden
-            ->orderBy('created_at')
-            ->get()
-            ->map(function($p) {
-                $p->tipo = 'orden';
-                $p->mesa_numero = optional(optional($p->orden)->mesa)->numero;
-                $p->cliente = 'Orden Directa';
-                $p->estado = $p->estado_cocina; // normalizar
-                return $p;
-            });
+        ->orderBy('created_at')
+        ->get()
+        ->map(function($p) {
+            $p->tipo = 'orden';
+            $p->mesa_numero = optional(optional($p->orden)->mesa)->numero;
+            
+            // ✅ CORRECCIÓN: Obtener nombre del cliente si hay reserva activa
+            $nombreCliente = 'Orden Directa';
+            if ($p->orden && $p->orden->mesa) {
+                $ahora = \Carbon\Carbon::now();
+                $reservaActiva = $p->orden->mesa->reservas()
+                    ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                    ->whereDate('fecha_reserva', $ahora->toDateString())
+                    ->get()
+                    ->first(function($reserva) use ($ahora) {
+                        $horaReserva = \Carbon\Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                        $inicioReserva = $horaReserva->copy();
+                        $finVentana = $horaReserva->copy()->addHours(3);
+                        return $ahora->between($inicioReserva, $finVentana);
+                    });
+                
+                if ($reservaActiva) {
+                    $nombreCliente = $reservaActiva->nombre_cliente ?? 'Orden Directa';
+                }
+            }
+            
+            $p->cliente = $nombreCliente; // ✅ NOMBRE DEL CLIENTE
+            $p->estado = $p->estado_cocina;
+            return $p;
+        });
 
         // ===== COMBINAR =====
         $todosPedidos = $pedidosReserva
