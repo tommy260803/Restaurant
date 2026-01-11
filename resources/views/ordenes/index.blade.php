@@ -43,18 +43,40 @@
     <div class="row g-3">
         @forelse($mesas as $mesa)
         @php
-        // Obtener estado calculado (considerando reservas)
         $estadoCalculado = $mesa->estado_calculado ?? $mesa->estado;
-
-        //trae reservas de HOY
         $proximaReservaHoy = $mesa->proxima_reserva_hoy ?? null;
-
         $esReserva = $mesa->es_reserva ?? false;
         @endphp
 
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
             <div class="card h-100" style="background-color: #2d2d44; border: 1px solid #3a3a54; border-radius: 8px;">
-                <div class="card-body text-center">
+                <div class="card-body text-center position-relative">
+                    
+                    {{-- ✅ DISTINTIVO PEQUEÑO: Esquina superior derecha --}}
+                    @if($estadoCalculado === 'ocupada')
+                        @if($esReserva)
+                            {{-- Distintivo RESERVA: Gradiente sutil --}}
+                            <span class="badge position-absolute top-0 end-0 m-2" 
+                                  style="background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%); 
+                                         color: #000; 
+                                         font-size: 0.65rem; 
+                                         padding: 0.25rem 0.5rem;
+                                         box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
+                                  title="Mesa ocupada por reserva">
+                                <i class="bi bi-calendar-check"></i>
+                            </span>
+                        @else
+                            {{-- Distintivo ORDEN DIRECTA: Amarillo simple --}}
+                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2" 
+                                  style="font-size: 0.65rem; 
+                                         padding: 0.25rem 0.5rem;
+                                         box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
+                                  title="Mesa ocupada por orden directa">
+                                <i class="bi bi-receipt"></i>
+                            </span>
+                        @endif
+                    @endif
+                    
                     {{-- Número de mesa --}}
                     <h5 class="card-title text-white mb-3">
                         Mesa #{{ $mesa->numero }}
@@ -65,119 +87,89 @@
                         <i class="bi bi-people me-1"></i>Capacidad: {{ $mesa->capacidad }}
                     </p>
 
-                    {{-- Badge de estado CALCULADO --}}
+                    {{-- Badge de estado principal --}}
                     @if($estadoCalculado === 'disponible')
-                    <span class="badge bg-success mb-3">Libre</span>
+                        <span class="badge bg-success mb-3">Libre</span>
+                        
                     @elseif($estadoCalculado === 'ocupada')
-                    @if($esReserva)
-                    {{-- Mesa ocupada POR RESERVA --}}
-                    <span class="badge mb-3"
-                        style="background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%); color: #000; font-weight: 600;">
-                        <i class="bi bi-calendar-check me-1"></i>Ocupada (Reserva)
-                    </span>
-                    @else
-                    {{-- Mesa ocupada normal --}}
-                    <span class="badge bg-warning text-dark mb-3">Ocupada</span>
-                    @endif
+                        <span class="badge bg-warning text-dark mb-3">Ocupada</span>
+                        
                     @elseif($estadoCalculado === 'reservada')
-                    <span class="badge bg-info text-dark mb-3">Reservada Ahora</span>
+                        <span class="badge bg-info text-dark mb-3">Reservada</span>
+                        
                     @elseif($estadoCalculado === 'mantenimiento')
-                    <span class="badge bg-danger mb-3">Mantenimiento</span>
+                        <span class="badge bg-danger mb-3">Mantenimiento</span>
                     @else
-                    <span class="badge bg-secondary mb-3">{{ ucfirst($estadoCalculado) }}</span>
+                        <span class="badge bg-secondary mb-3">{{ ucfirst($estadoCalculado) }}</span>
                     @endif
 
-                    {{-- Información de próxima reserva si existe --}}
+                    {{-- Información de próxima reserva --}}
                     @if($estadoCalculado === 'disponible' && $proximaReservaHoy)
                     <div class="alert alert-info py-1 px-2 mb-3"
-                        style="font-size: 0.75rem; background-color: #17a2b8; border-color: #17a2b8; color: #fff;">
+                        style="font-size: 0.7rem; background-color: rgba(23, 162, 184, 0.15); border: 1px solid #17a2b8; color: #17a2b8;">
                         <i class="bi bi-calendar-check me-1"></i>
                         <strong>Reserva:</strong><br>
-                        {{ \Carbon\Carbon::parse($proximaReservaHoy->fecha_reserva)->format('d/m/Y') }}<br>
-                        <strong>{{ \Carbon\Carbon::parse($proximaReservaHoy->hora_reserva)->format('g:i A') }}</strong>
+                        {{ \Carbon\Carbon::parse($proximaReservaHoy->hora_reserva)->format('g:i A') }}
                     </div>
                     @endif
 
-                    {{-- ✅ Info adicional para mesas ocupadas por reserva --}}
+                    {{-- Info adicional para mesas ocupadas por reserva --}}
                     @if($estadoCalculado === 'ocupada' && $esReserva)
                     @php
                     $ahora = \Carbon\Carbon::now();
                     $reservaActual = $mesa->reservas->first(function($r) use ($ahora) {
-                    $horaReserva = \Carbon\Carbon::parse($r->fecha_reserva->toDateString() . ' ' . $r->hora_reserva);
-                    return $ahora->between($horaReserva->copy()->subMinutes(30), $horaReserva->copy()->addHours(3));
+                        $horaReserva = \Carbon\Carbon::parse($r->fecha_reserva->toDateString() . ' ' . $r->hora_reserva);
+                        return $ahora->between($horaReserva->copy(), $horaReserva->copy()->addHours(3));
                     });
                     @endphp
 
                     @if($reservaActual)
                     <div class="alert alert-info py-1 px-2 mb-3"
-                        style="font-size: 0.7rem; background-color: rgba(23, 162, 184, 0.2); border-color: #17a2b8; color: #17a2b8;">
+                        style="font-size: 0.7rem; background-color: rgba(23, 162, 184, 0.1); border: 1px solid #17a2b8; color: #17a2b8;">
                         <i class="bi bi-person-check me-1"></i>
-                        {{ $reservaActual->nombre_cliente }}<br>
-                        <small>{{ \Carbon\Carbon::parse($reservaActual->hora_reserva)->format('g:i A') }}</small>
+                        <strong>{{ $reservaActual->nombre_cliente }}</strong>
                         @if($reservaActual->platos->isNotEmpty())
-                        <br><small class="badge badge-sm"
-                            style="background-color: #28a745; color: #fff; font-size: 0.65rem;">
-                            <i class="bi bi-basket me-1"></i>{{ $reservaActual->platos->count() }} platos pre-ordenados
+                        <br><small class="badge badge-sm mt-1"
+                            style="background-color: #28a745; color: #fff; font-size: 0.6rem;">
+                            <i class="bi bi-basket"></i> {{ $reservaActual->platos->count() }}
                         </small>
                         @endif
                     </div>
                     @endif
                     @endif
 
-                    {{-- Botón de acción según el estado CALCULADO --}}
+                    {{-- Botón de acción --}}
                     @if($estadoCalculado === 'disponible')
-                    {{-- Mesa disponible: Abrir mesa --}}
-                    <form action="{{ route('ordenes.abrir', $mesa->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn w-100"
-                            style="background-color: #28a745; color: #fff; font-weight: 500;">
-                            Abrir Mesa
-                        </button>
-                    </form>
+                        <form action="{{ route('ordenes.abrir', $mesa->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn w-100"
+                                style="background-color: #28a745; color: #fff; font-weight: 500;">
+                                Abrir Mesa
+                            </button>
+                        </form>
+                        
                     @elseif($estadoCalculado === 'ocupada')
-                    {{-- Mesa ocupada: Ver órdenes --}}
-                    <a href="{{ route('ordenes.ver', $mesa->id) }}" class="btn w-100"
-                        style="background-color: #ffc107; color: #000; font-weight: 500;">
-                        Ver Órdenes
-                    </a>
+                        <a href="{{ route('ordenes.ver', $mesa->id) }}" class="btn w-100"
+                            style="background-color: #ffc107; color: #000; font-weight: 500;">
+                            Ver Órdenes
+                        </a>
+                        
                     @elseif($estadoCalculado === 'reservada')
-                    {{-- Mesa reservada AHORA: No se puede usar --}}
-                    <button class="btn w-100" disabled
-                        style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;"
-                        data-bs-toggle="tooltip" title="Mesa con reserva activa">
-                        <i class="bi bi-calendar-x me-1"></i>
-                        Reservada
-                    </button>
-
-                    {{-- Mostrar info de la reserva activa --}}
-                    @php
-                    $ahora = \Carbon\Carbon::now();
-                    $reservaActiva = $mesa->reservas->first(function($r) use ($ahora) {
-                    // Solo buscar en reservas de HOY que ya fueron cargadas
-                    $horaReserva = \Carbon\Carbon::parse($r->fecha_reserva->toDateString() . ' ' . $r->hora_reserva);
-                    return $ahora->between($horaReserva->copy()->subMinutes(60), $horaReserva->copy()->addHours(5));
-                    });
-                    @endphp
-
-                    @if($reservaActiva)
-                    <small class="text-info d-block mt-2" style="font-size: 0.7rem;">
-                        <strong>{{ \Carbon\Carbon::parse($reservaActiva->hora_reserva)->format('g:i A') }}</strong><br>
-                        {{ $reservaActiva->nombre_cliente }}
-                    </small>
-                    @endif
+                        <button class="btn w-100" disabled
+                            style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;">
+                            <i class="bi bi-lock me-1"></i>Reservada
+                        </button>
+                        
                     @elseif($estadoCalculado === 'mantenimiento')
-                    {{-- Mesa en mantenimiento: No disponible --}}
-                    <button class="btn w-100" disabled
-                        style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;">
-                        <i class="bi bi-tools me-1"></i>
-                        En Mantenimiento
-                    </button>
+                        <button class="btn w-100" disabled
+                            style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;">
+                            <i class="bi bi-tools me-1"></i>Mantenimiento
+                        </button>
                     @else
-                    {{-- Estado desconocido --}}
-                    <button class="btn w-100" disabled
-                        style="background-color: #6c757d; color: #fff; font-weight: 500;">
-                        No Disponible
-                    </button>
+                        <button class="btn w-100" disabled
+                            style="background-color: #6c757d; color: #fff; font-weight: 500;">
+                            No Disponible
+                        </button>
                     @endif
                 </div>
             </div>
@@ -191,6 +183,43 @@
         @endforelse
     </div>
 
+    {{-- Leyenda simplificada --}}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card" style="background-color: #2d2d44; border: 1px solid #3a3a54;">
+                <div class="card-body">
+                    <h6 class="text-white mb-3">
+                        <i class="bi bi-info-circle me-2"></i>Leyenda:
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">Libre</span>
+                                <small style="color: #b8b8d1;">Mesa disponible</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="bi bi-receipt"></i>
+                                </span>
+                                <small style="color: #b8b8d1;">Orden directa</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <span class="badge me-2" style="background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%); color: #000;">
+                                    <i class="bi bi-calendar-check"></i>
+                                </span>
+                                <small style="color: #b8b8d1;">Reserva activa</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 
@@ -201,9 +230,12 @@ body {
     color: #fff;
 }
 
+.card {
+    transition: all 0.3s ease;
+}
+
 .card:hover {
     transform: translateY(-5px);
-    transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -211,14 +243,6 @@ body {
     opacity: 0.9;
     transform: scale(1.02);
     transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-    border-bottom: 2px solid #28a745 !important;
-}
-
-.btn:disabled {
-    opacity: 0.6;
 }
 
 .badge {
@@ -230,32 +254,15 @@ body {
         opacity: 0;
         transform: scale(0.9);
     }
-
     to {
         opacity: 1;
         transform: scale(1);
     }
 }
 
-.alert-info {
-    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
-}
-
-/* Animación especial para el badge de reserva */
-.badge[style*="linear-gradient"] {
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.8;
-    }
+/* Distintivo con sombra sutil */
+.position-absolute.badge {
+    z-index: 10;
 }
 </style>
 @endpush

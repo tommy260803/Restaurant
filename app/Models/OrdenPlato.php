@@ -19,6 +19,7 @@ class OrdenPlato extends Model
         'subtotal',
         'estado_cocina',
         'notas',
+        'es_preorden', // ✅ NUEVO CAMPO
         'enviado_cocina_at',
         'en_preparacion_at',
         'preparado_at',
@@ -28,6 +29,7 @@ class OrdenPlato extends Model
     protected $casts = [
         'precio_unitario' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'es_preorden' => 'boolean', // ✅ CAST A BOOLEAN
         'enviado_cocina_at' => 'datetime',
         'en_preparacion_at' => 'datetime',
         'preparado_at' => 'datetime',
@@ -66,6 +68,18 @@ class OrdenPlato extends Model
         return $query->where('estado_cocina', 'Entregado');
     }
 
+    // ✅ NUEVO: Scope para platos de pre-orden
+    public function scopePreOrden($query)
+    {
+        return $query->where('es_preorden', true);
+    }
+
+    // ✅ NUEVO: Scope para platos agregados después
+    public function scopeAgregadosDespues($query)
+    {
+        return $query->where('es_preorden', false);
+    }
+
     // Métodos auxiliares
     public function calcularSubtotal()
     {
@@ -89,9 +103,16 @@ class OrdenPlato extends Model
             }
         });
 
-        // Después de crear/actualizar/eliminar, actualizar total de la orden
-        static::saved(function ($ordenPlato) {
+        // ✅ SOLO cuando se crea un plato
+        static::created(function ($ordenPlato) {
             $ordenPlato->orden->actualizarTotal();
+        });
+
+        // ✅ SOLO cuando cambian valores que afectan el total
+        static::updated(function ($ordenPlato) {
+            if ($ordenPlato->wasChanged(['cantidad', 'precio_unitario', 'subtotal'])) {
+                $ordenPlato->orden->actualizarTotal();
+            }
         });
 
         static::deleted(function ($ordenPlato) {

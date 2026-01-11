@@ -39,52 +39,94 @@ class Mesa extends Model
 
     /**
      * ============================================
-     * NUEVO: Método para obtener el estado REAL de la mesa
-     * considerando reservas activas según fecha/hora
+     * MÉTODO CORREGIDO: Estado real de la mesa
      * ============================================
      */
     public function getEstadoRealAttribute()
     {
-        // Si la mesa está en mantenimiento, siempre retornar mantenimiento
+        // Prioridad 1: Mantenimiento siempre es mantenimiento
         if ($this->estado === 'mantenimiento') {
             return 'mantenimiento';
         }
 
-        // Si la mesa está ocupada por una orden activa (no por reserva), retornar ocupada
-        if ($this->estado === 'ocupada') {
-            return 'ocupada';
-        }
-
-        // Verificar si hay una reserva ACTIVA en este momento
         $ahora = Carbon::now();
         
-        $reservaActiva = $this->reservas()
+        // ✅ PRIMERO: Verificar si hay reserva activa ANTES de revisar el estado en BD
+        $tipoReserva = $this->reservas()
             ->whereIn('estado', ['confirmada', 'pendiente'])
             ->where('fecha_reserva', $ahora->toDateString())
             ->get()
             ->first(function($reserva) use ($ahora) {
-                // Parsear hora de reserva
                 $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
                 
-                // Considerar que la reserva está "activa" si estamos dentro de una ventana de tiempo:
-                // - 30 minutos antes de la hora (margen de llegada temprana)
-                // - 2 horas después (duración estimada de la reserva)
-                $inicioVentana = $horaReserva->copy()->subMinutes(30);
-                $finVentana = $horaReserva->copy()->addHours(2);
+                $inicioBloqueo = $horaReserva->copy()->subMinutes(30);
+                $inicioReserva = $horaReserva->copy();
+                $finVentana = $horaReserva->copy()->addHours(3);
                 
-                return $ahora->between($inicioVentana, $finVentana);
+                if ($ahora->between($inicioBloqueo, $inicioReserva)) {
+                    return 'proxima';
+                }
+                
+                if ($ahora->between($inicioReserva, $finVentana)) {
+                    return 'activa';
+                }
+                
+                return false;
             });
 
-        if ($reservaActiva) {
-            return 'reservada'; // Tiene reserva activa AHORA
+        // Si hay reserva próxima (30 min antes)
+        if ($tipoReserva === 'proxima') {
+            return 'reservada';
+        }
+        
+        // ✅ CRÍTICO: Si hay reserva activa (hora llegó)
+        if ($tipoReserva === 'activa') {
+            // Actualizar estado en BD si no está ocupada
+            try {
+                if ($this->estado !== 'ocupada') {
+                    \DB::table('mesas')->where('id', $this->id)->update(['estado' => 'ocupada']);
+                    $this->estado = 'ocupada'; // Actualizar atributo en memoria
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error actualizando estado de mesa: ' . $e->getMessage());
+            }
+            return 'ocupada';
         }
 
-        // Si no hay reserva activa, la mesa está disponible
+        // Si está ocupada en BD (con orden activa)
+        if ($this->estado === 'ocupada') {
+            return 'ocupada';
+        }
+
+        // Por defecto: disponible
         return 'disponible';
     }
 
+    
+    public function actualizarEstadoSiTieneReservaActiva()
+{
+    $ahora = Carbon::now();
+    
+    $tieneReservaActiva = $this->reservas()
+        ->whereIn('estado', ['confirmada', 'pendiente'])
+        ->where('fecha_reserva', $ahora->toDateString())
+        ->get()
+        ->contains(function($reserva) use ($ahora) {
+            $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+            $inicioReserva = $horaReserva->copy();
+            $finVentana = $horaReserva->copy()->addHours(3);
+            
+            return $ahora->between($inicioReserva, $finVentana);
+        });
+    
+    if ($tieneReservaActiva && $this->estado !== 'ocupada') {
+        $this->update(['estado' => 'ocupada']);
+    }
+    
+    return $this;
+}
     /**
-     * Método alternativo: verificar si tiene reserva activa
+     * Verificar si tiene reserva activa (hora ya llegó)
      */
     public function tieneReservaActiva()
     {
@@ -96,10 +138,52 @@ class Mesa extends Model
             ->get()
             ->contains(function($reserva) use ($ahora) {
                 $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
-                $inicioVentana = $horaReserva->copy()->subMinutes(30);
-                $finVentana = $horaReserva->copy()->addHours(2);
+                $inicioReserva = $horaReserva->copy();
+                $finVentana = $horaReserva->copy()->addHours(3);
                 
-                return $ahora->between($inicioVentana, $finVentana);
+                // Solo si YA llegó la hora
+                return $ahora->between($inicioReserva, $finVentana);
+            });
+    }
+
+    /**
+     * Verificar si tiene reserva próxima (30 min antes)
+     */
+    public function tieneReservaProxima()
+    {
+        $ahora = Carbon::now();
+        
+        return $this->reservas()
+            ->whereIn('estado', ['confirmada', 'pendiente'])
+            ->where('fecha_reserva', $ahora->toDateString())
+            ->get()
+            ->contains(function($reserva) use ($ahora) {
+                $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                $inicioBloqueo = $horaReserva->copy()->subMinutes(30);
+                $inicioReserva = $horaReserva->copy();
+                
+                // Solo si estamos en la ventana ANTES de la hora
+                return $ahora->between($inicioBloqueo, $inicioReserva);
+            });
+    }
+
+    /**
+     * Obtener la reserva activa actual (si existe)
+     */
+    public function getReservaActivaAttribute()
+    {
+        $ahora = Carbon::now();
+        
+        return $this->reservas()
+            ->whereIn('estado', ['confirmada', 'pendiente'])
+            ->where('fecha_reserva', $ahora->toDateString())
+            ->get()
+            ->first(function($reserva) use ($ahora) {
+                $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                $inicioReserva = $horaReserva->copy();
+                $finVentana = $horaReserva->copy()->addHours(3);
+                
+                return $ahora->between($inicioReserva, $finVentana);
             });
     }
 
@@ -114,13 +198,14 @@ class Mesa extends Model
             ->whereIn('estado', ['confirmada', 'pendiente'])
             ->where(function($query) use ($ahora) {
                 $query->where('fecha_reserva', '>', $ahora->toDateString())
-                      ->orWhere(function($q) use ($ahora) {
-                          $q->where('fecha_reserva', $ahora->toDateString())
+                    ->orWhere(function($q) use ($ahora) {
+                        $q->where('fecha_reserva', $ahora->toDateString())
                             ->whereRaw("TIME(hora_reserva) > ?", [$ahora->format('H:i:s')]);
-                      });
+                    });
             })
             ->orderBy('fecha_reserva')
             ->orderBy('hora_reserva')
             ->first();
     }
+    
 }

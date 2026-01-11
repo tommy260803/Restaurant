@@ -16,28 +16,38 @@ class OrdenController extends Controller
 {
     /**
      * Vista principal: Panel de mesas
-     * Muestra todas las mesas con su estado REAL considerando reservas activas
      */
-public function index()
+    public function index()
     {
         $hoy = Carbon::today();
         
         $mesas = Mesa::with(['reservas' => function($query) use ($hoy) {
             $query->whereDate('fecha_reserva', $hoy)
-                  ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
-                  ->with('platos')
-                  ->orderBy('hora_reserva');
+                ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                ->with('platos')
+                ->orderBy('hora_reserva');
         }])->orderBy('numero')->get();
         
         $mesas->map(function ($mesa) use ($hoy) {
+            // ✅ Recargar reservas frescas
+            $mesa->load(['reservas' => function($query) use ($hoy) {
+                $query->whereDate('fecha_reserva', $hoy)
+                    ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                    ->with('platos')
+                    ->orderBy('hora_reserva');
+            }]);
+
+            $mesa->actualizarEstadoSiTieneReservaActiva();
+
             $mesa->estado_calculado = $mesa->estado_real;
             
-            // Verificar si tiene orden activa en BD
+            
             $mesa->tiene_orden_activa = Orden::where('mesa_id', $mesa->id)
                 ->where('estado', 'abierta')
                 ->exists();
             
             $mesa->proxima_reserva_hoy = $this->obtenerProximaReservaHoy($mesa, $hoy);
+            
             $mesa->es_reserva = $this->mesaOcupadaPorReserva($mesa);
             
             return $mesa;
@@ -49,31 +59,31 @@ public function index()
     /**
      * Abrir una mesa (cambiar a ocupada)
      */
+    /**
+     * Abrir una mesa (cambiar a ocupada)
+     */
     public function abrirMesa(Mesa $mesa)
     {
         $estadoReal = $mesa->estado_real;
-        
-        if ($estadoReal === 'reservada') {
-            return redirect()->back()
-                ->with('error', 'Esta mesa tiene una reserva activa en este momento.');
-        }
-        
-        if ($estadoReal === 'ocupada') {
-            return redirect()->back()
-                ->with('error', 'Esta mesa ya está ocupada.');
-        }
         
         if ($estadoReal === 'mantenimiento') {
             return redirect()->back()
                 ->with('error', 'Esta mesa está en mantenimiento.');
         }
+        
+        $tieneOrdenActiva = Orden::where('mesa_id', $mesa->id)
+            ->where('estado', 'abierta')
+            ->exists();
+        
+        if ($tieneOrdenActiva) {
+            return redirect()->route('ordenes.ver', $mesa->id)
+                ->with('info', 'Esta mesa ya tiene una orden activa.');
+        }
 
         DB::beginTransaction();
         try {
-            // Cambiar estado de mesa
             $mesa->update(['estado' => 'ocupada']);
             
-            // Crear orden en BD
             $orden = Orden::create([
                 'mesa_id' => $mesa->id,
                 'estado' => 'abierta',
@@ -81,6 +91,27 @@ public function index()
                 'abierta_por' => Auth::id(),
                 'fecha_apertura' => now(),
             ]);
+            
+            $reservaActiva = $this->obtenerReservaActivaConPlatos($mesa);
+            
+            if ($reservaActiva && $reservaActiva->platos->isNotEmpty()) {
+                foreach ($reservaActiva->platos as $plato) {
+                    OrdenPlato::create([
+                        'orden_id' => $orden->id,
+                        'plato_id' => $plato->idPlatoProducto,
+                        'cantidad' => $plato->pivot->cantidad,
+                        'precio_unitario' => $plato->pivot->precio,
+                        'notas' => $plato->pivot->notas ?? '',
+                        'estado_cocina' => 'Enviado a cocina',
+                        'es_preorden' => true, // ✅ MARCAR COMO PRE-ORDEN
+                    ]);
+                }
+                
+                DB::commit();
+                
+                return redirect()->route('ordenes.ver', $mesa->id)
+                    ->with('success', 'Mesa #' . $mesa->numero . ' abierta con ' . $reservaActiva->platos->count() . ' plato(s) de la reserva cargados automáticamente');
+            }
             
             DB::commit();
             
@@ -101,26 +132,28 @@ public function index()
     {
         $estadoReal = $mesa->estado_real;
         
-        // Buscar orden activa en BD
         $orden = Orden::with('platos.plato')
             ->where('mesa_id', $mesa->id)
             ->where('estado', 'abierta')
             ->first();
         
-        if ($estadoReal !== 'ocupada' && !$orden) {
+        $reservaActiva = $this->obtenerReservaActiva($mesa);
+        
+        if ($estadoReal !== 'ocupada' && !$orden && !$reservaActiva) {
             return redirect()->route('ordenes.index')
                 ->with('error', 'Esta mesa no tiene una orden activa');
         }
         
-        // Verificar si hay una reserva activa con platos pre-ordenados
-        $reservaActiva = $this->obtenerReservaActivaConPlatos($mesa);
         $esReserva = false;
         $reserva = null;
         
         if ($reservaActiva && !$orden) {
-            // Crear orden y cargar platos de la reserva
             DB::beginTransaction();
             try {
+                if ($mesa->estado !== 'ocupada') {
+                    $mesa->update(['estado' => 'ocupada']);
+                }
+                
                 $orden = Orden::create([
                     'mesa_id' => $mesa->id,
                     'estado' => 'abierta',
@@ -129,15 +162,19 @@ public function index()
                     'fecha_apertura' => now(),
                 ]);
                 
-                foreach ($reservaActiva->platos as $plato) {
-                    OrdenPlato::create([
-                        'orden_id' => $orden->id,
-                        'plato_id' => $plato->idPlatoProducto,
-                        'cantidad' => $plato->pivot->cantidad,
-                        'precio_unitario' => $plato->pivot->precio,
-                        'notas' => $plato->pivot->notas ?? '',
-                        'estado_cocina' => 'Enviado a cocina',
-                    ]);
+                // ✅ CORREGIDO: Marcar platos de reserva con es_preorden = true
+                if ($reservaActiva->platos->isNotEmpty()) {
+                    foreach ($reservaActiva->platos as $plato) {
+                        OrdenPlato::create([
+                            'orden_id' => $orden->id,
+                            'plato_id' => $plato->idPlatoProducto,
+                            'cantidad' => $plato->pivot->cantidad,
+                            'precio_unitario' => $plato->pivot->precio,
+                            'notas' => $plato->pivot->notas ?? '',
+                            'estado_cocina' => 'Enviado a cocina',
+                            'es_preorden' => true, // ✅ MARCAR COMO PRE-ORDEN
+                        ]);
+                    }
                 }
                 
                 DB::commit();
@@ -150,19 +187,32 @@ public function index()
             } catch (\Exception $e) {
                 DB::rollBack();
                 return redirect()->back()
-                    ->with('error', 'Error al cargar platos de reserva: ' . $e->getMessage());
+                    ->with('error', 'Error al crear orden: ' . $e->getMessage());
             }
         } elseif (!$orden) {
-            // Crear orden vacía si no existe
-            $orden = Orden::create([
-                'mesa_id' => $mesa->id,
-                'estado' => 'abierta',
-                'total' => 0,
-                'abierta_por' => Auth::id(),
-                'fecha_apertura' => now(),
-            ]);
+            // Crear orden vacía si no existe y no hay reserva
+            DB::beginTransaction();
+            try {
+                if ($mesa->estado !== 'ocupada') {
+                    $mesa->update(['estado' => 'ocupada']);
+                }
+                
+                $orden = Orden::create([
+                    'mesa_id' => $mesa->id,
+                    'estado' => 'abierta',
+                    'total' => 0,
+                    'abierta_por' => Auth::id(),
+                    'fecha_apertura' => now(),
+                ]);
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->with('error', 'Error al crear orden: ' . $e->getMessage());
+            }
         } else {
-            // Verificar si la orden es de una reserva
+            // Si ya hay orden, verificar si es de una reserva
             if ($reservaActiva) {
                 $esReserva = true;
                 $reserva = $reservaActiva;
@@ -225,7 +275,7 @@ public function index()
         
         DB::beginTransaction();
         try {
-            // ✅ Crear plato en BD - SE ENVÍA A COCINA AUTOMÁTICAMENTE
+            // ✅ CORREGIDO: Platos agregados manualmente NO son pre-orden
             $ordenPlato = OrdenPlato::create([
                 'orden_id' => $orden->id,
                 'plato_id' => $plato->idPlatoProducto,
@@ -233,6 +283,7 @@ public function index()
                 'precio_unitario' => $plato->precio,
                 'notas' => '',
                 'estado_cocina' => 'Enviado a cocina',
+                'es_preorden' => false, // ✅ NO ES PRE-ORDEN (agregado después)
             ]);
             
             DB::commit();
@@ -364,7 +415,7 @@ public function index()
     /**
      * Actualizar nota de un plato (AJAX)
      */
-     public function actualizarNota(Request $request, Mesa $mesa)
+    public function actualizarNota(Request $request, Mesa $mesa)
     {
         $request->validate([
             'plato_id' => 'required|integer',
@@ -394,11 +445,14 @@ public function index()
         }
         
         try {
-            $ordenPlato->update(['notas' => $request->nota ?? '']);
+            // $ordenPlato->update(['notas' => $request->nota ?? '']);
+            $ordenPlato->notas = $request->nota ?? '';
+            $ordenPlato->save();
             
             return response()->json([
                 'success' => true,
-                'message' => 'Nota actualizada'
+                'message' => 'Nota actualizada',
+                'nota' => $ordenPlato->notas
             ]);
             
         } catch (\Exception $e) {
@@ -460,7 +514,7 @@ public function index()
     }
 
     /**
-     * Volver a la vista anterior SIN cancelar la orden
+     * Volver a la vista anterior
      */
     public function volver(Mesa $mesa)
     {
@@ -536,27 +590,8 @@ public function index()
     }
 
     // ============================================
-    // MÉTODOS PRIVADOS AUXILIARES
+    // MÉTODOS PRIVADOS AUXILIARES CORREGIDOS
     // ============================================
-
-    private function obtenerOrdenMesa($mesaId)
-    {
-        $sessionKey = 'orden_mesa_' . $mesaId;
-        return Session::get($sessionKey, []);
-    }
-
-    private function calcularTotal($orden)
-    {
-        $total = 0;
-        
-        if (isset($orden['platos']) && is_array($orden['platos'])) {
-            foreach ($orden['platos'] as $plato) {
-                $total += $plato['precio'] * $plato['cantidad'];
-            }
-        }
-        
-        return $total;
-    }
 
     private function obtenerProximaReservaHoy($mesa, $fechaHoy)
     {
@@ -572,75 +607,42 @@ public function index()
             ->first();
     }
 
-    /**
-     * ✅ NUEVO: Obtener reserva activa con platos pre-ordenados
-     */
-    private function obtenerReservaActivaConPlatos(Mesa $mesa)
+    private function obtenerReservaActiva(Mesa $mesa)
     {
         $ahora = Carbon::now();
         $hoy = Carbon::today();
         
         return $mesa->reservas()
-            ->with('platos')
+            ->with('platos') // Cargar platos por si los tiene
             ->whereDate('fecha_reserva', $hoy)
-            ->whereIn('estado', ['confirmada', 'completada'])
+            ->whereIn('estado', ['confirmada', 'pendiente','completada'])
             ->get()
             ->first(function($reserva) use ($ahora) {
                 $horaReserva = Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
-                $inicioVentana = $horaReserva->copy()->subMinutes(30);
+                $inicioReserva = $horaReserva->copy();
                 $finVentana = $horaReserva->copy()->addHours(3);
                 
-                return $ahora->between($inicioVentana, $finVentana) && $reserva->platos->isNotEmpty();
+                return $ahora->between($inicioReserva, $finVentana);
             });
     }
 
-    /**
-     * ✅ NUEVO: Cargar platos de la reserva en la sesión de orden
-     */
-    private function cargarPlatosDeReserva(Mesa $mesa, Reserva $reserva)
+    private function obtenerReservaActivaConPlatos(Mesa $mesa)
     {
-        $sessionKey = 'orden_mesa_' . $mesa->id;
+        $reservaActiva = $this->obtenerReservaActiva($mesa);
         
-        $platosOrden = [];
-        
-        foreach ($reserva->platos as $plato) {
-            $platosOrden[$plato->idPlatoProducto] = [
-                'id' => $plato->idPlatoProducto,
-                'nombre' => $plato->nombre,
-                'precio' => $plato->pivot->precio, // Precio guardado en la reserva
-                'cantidad' => $plato->pivot->cantidad,
-                'nota' => $plato->pivot->notas ?? '', // Notas de la reserva
-                'de_reserva' => true, // Marcar que viene de reserva
-            ];
+        // Solo retornar si tiene platos
+        if ($reservaActiva && $reservaActiva->platos->isNotEmpty()) {
+            return $reservaActiva;
         }
         
-        Session::put($sessionKey, [
-            'mesa_id' => $mesa->id,
-            'platos' => $platosOrden,
-            'fecha_apertura' => now(),
-            'es_reserva' => true,
-            'reserva_id' => $reserva->id,
-        ]);
+        return null;
     }
 
-    /**
-     * ✅ NUEVO: Verificar si una mesa ocupada lo está por una reserva
-     */
     private function mesaOcupadaPorReserva(Mesa $mesa)
     {
-        if ($mesa->estado !== 'ocupada') {
-            return false;
-        }
-        
-        $orden = Orden::where('mesa_id', $mesa->id)
-            ->where('estado', 'abierta')
-            ->first();
-        
-        if (!$orden) {
-            return false;
-        }
-        
-        $reservaActiva = $this->obtenerReservaActivaConPlatos($mesa);
+        // ✅ USAR obtenerReservaActiva() en lugar de obtenerReservaActivaConPlatos()
+        // Porque queremos detectar CUALQUIER reserva, tenga o no platos
+        $reservaActiva = $this->obtenerReservaActiva($mesa);
         return $reservaActiva !== null;
     }
 }

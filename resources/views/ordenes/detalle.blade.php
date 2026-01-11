@@ -67,7 +67,8 @@
                                     <tr data-plato-id="{{ $ordenPlato->id }}">
                                         <td style="color: #e8e8f0;">
                                             {{ $ordenPlato->plato->nombre ?? 'Plato eliminado' }}
-                                            @if($esReserva ?? false)
+                                            {{-- ✅ CORRECCIÓN: Usar es_preorden del plato, NO $esReserva de la orden --}}
+                                            @if($ordenPlato->es_preorden ?? false)
                                                 <span class="badge badge-sm ms-2" style="background-color: #28a745; font-size: 0.65rem;">
                                                     <i class="bi bi-calendar-check"></i> Pre-orden
                                                 </span>
@@ -93,7 +94,7 @@
                                         <td class="subtotal" style="color: #e8e8f0;">
                                             ${{ number_format($ordenPlato->subtotal, 2) }}
                                         </td>
-                                        <td>
+                                        <td class="td-nota">
                                             <button class="btn btn-sm btn-outline-info btn-nota" 
                                                     data-bs-toggle="tooltip" 
                                                     title="Agregar nota"
