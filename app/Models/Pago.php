@@ -11,8 +11,10 @@ class Pago extends Model
     protected $primaryKey = 'id';
     public $timestamps = false;
 
-    // Columnas reales en la tabla: id, venta_id, reserva_id, metodo, numero_operacion, monto, fecha, estado
+    // Columnas reales en la tabla: id, cliente_id, orden_id, venta_id, reserva_id, metodo, numero_operacion, monto, fecha, estado
     protected $fillable = [
+        'cliente_id',
+        'orden_id',
         'venta_id',
         'reserva_id',
         'metodo',
@@ -21,6 +23,18 @@ class Pago extends Model
         'fecha',
         'estado',
     ];
+
+    // Relación con cliente
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id', 'idCliente');
+    }
+
+    // Relación con orden
+    public function orden()
+    {
+        return $this->belongsTo(Orden::class, 'orden_id', 'id');
+    }
 
     // Relación con reserva (si aplica)
     public function reserva()

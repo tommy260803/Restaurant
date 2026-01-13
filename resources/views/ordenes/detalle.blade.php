@@ -162,18 +162,16 @@
                 <div class="card-body text-center">
                     <h5 class="text-white mb-3">Total:</h5>
                     <h2 class="text-success mb-4" id="total-orden">
-                        ${{ number_format($total, 2) }}
+                        S/. {{ number_format($total, 2) }}
                     </h2>
 
-                    <form action="{{ route('ordenes.cobrar', $mesa->id) }}" method="POST" id="form-cobrar">
-                        @csrf
-                        <button type="submit" 
-                                class="btn btn-success btn-lg w-100"
-                                id="btn-cobrar"
-                                {{ $orden->platos->isEmpty() ? 'disabled' : '' }}>
-                            <i class="bi bi-cash-coin me-2"></i>Cobrar
-                        </button>
-                    </form>
+                    <button type="button" 
+                            class="btn btn-success btn-lg w-100"
+                            id="btn-cobrar"
+                            onclick="abrirModalPago({{ $mesa->id }}, {{ $total }})"
+                            {{ $orden->platos->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-cash-coin me-2"></i>Cobrar
+                    </button>
 
                     <div class="mt-4 text-start">
                         <p class="small mb-1" style="color: #b8b8d1;">
@@ -202,6 +200,9 @@
 
 {{-- Modal: Agregar/Editar Nota --}}
 @include('ordenes.partials.modal-nota')
+
+{{-- Modal: Pago --}}
+@include('ordenes.partials.modal-pago')
 
 @endsection
 

@@ -7,6 +7,8 @@ use App\Models\Plato;
 use App\Models\Reserva;
 use App\Models\Orden;
 use App\Models\OrdenPlato;
+use App\Models\Cliente;
+use App\Models\Pago;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -504,13 +506,124 @@ class OrdenController extends Controller
             DB::commit();
             
             return redirect()->route('ordenes.index')
-                ->with('success', 'Orden cobrada exitosamente. Total: $' . number_format($orden->total, 2));
+                ->with('success', 'Orden cobrada exitosamente. Total: S/. ' . number_format($orden->total, 2));
                 
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Error al cobrar: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Procesar pago con datos del cliente (AJAX)
+     */
+    public function procesarPago(Request $request, Mesa $mesa)
+    {
+        $request->validate([
+            'cliente_id' => 'nullable|integer|exists:cliente,idCliente',
+            'metodo' => 'required|in:efectivo,tarjeta,yape,plin,otros',
+            'numero_operacion' => 'nullable|string|max:191',
+            'monto' => 'required|numeric|min:0',
+        ]);
+
+        $orden = Orden::with('platos')
+            ->where('mesa_id', $mesa->id)
+            ->where('estado', 'abierta')
+            ->first();
+        
+        if (!$orden) {
+            return response()->json(['message' => 'No hay orden activa'], 404);
+        }
+
+        if ($orden->platos->isEmpty()) {
+            return response()->json(['message' => 'La orden no tiene platos'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Marcar orden como pagada
+            $orden->update([
+                'estado' => 'pagada',
+                'fecha_cierre' => now(),
+            ]);
+            
+            // Marcar todos los platos como entregados
+            $orden->platos()->update([
+                'estado_cocina' => 'Entregado',
+                'entregado_at' => now(),
+            ]);
+            
+            // Crear registro de pago
+            $pago = Pago::create([
+                'cliente_id' => $request->cliente_id,
+                'orden_id' => $orden->id,
+                'metodo' => $request->metodo,
+                'numero_operacion' => $request->numero_operacion,
+                'monto' => $request->monto,
+                'fecha' => now(),
+                'estado' => 'confirmado',
+            ]);
+
+            // Si hay reserva asociada, completarla
+            $reservaActiva = $this->obtenerReservaActivaConPlatos($mesa);
+            if ($reservaActiva) {
+                $reservaActiva->update(['estado' => 'completada']);
+            }
+            
+            // Liberar mesa
+            $mesa->update(['estado' => 'disponible']);
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago procesado exitosamente',
+                'pago' => $pago,
+            ]);
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar pago: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Buscar clientes (AJAX)
+     */
+    public function buscarClientes(Request $request)
+    {
+        $buscar = $request->get('buscar', '');
+        
+        if (strlen($buscar) < 2) {
+            return response()->json(['clientes' => []]);
+        }
+
+        $clientes = Cliente::where('estado', 'activo')
+            ->where(function($query) use ($buscar) {
+                $query->where('nombre', 'LIKE', "%$buscar%")
+                    ->orWhere('apellidoPaterno', 'LIKE', "%$buscar%")
+                    ->orWhere('apellidoMaterno', 'LIKE', "%$buscar%")
+                    ->orWhere('telefono', 'LIKE', "%$buscar%")
+                    ->orWhere('email', 'LIKE', "%$buscar%");
+            })
+            ->select('idCliente', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'telefono', 'email', 'puntos')
+            ->limit(10)
+            ->get()
+            ->map(function($cliente) {
+                return [
+                    'idCliente' => $cliente->idCliente,
+                    'nombre' => $cliente->nombre . ' ' . $cliente->apellidoPaterno . ' ' . $cliente->apellidoMaterno,
+                    'telefono' => $cliente->telefono,
+                    'email' => $cliente->email,
+                    'puntos' => $cliente->puntos,
+                ];
+            });
+
+        return response()->json(['clientes' => $clientes]);
     }
 
     /**

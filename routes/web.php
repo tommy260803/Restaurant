@@ -418,6 +418,12 @@ Route::prefix('ordenes')->name('ordenes.')->group(function () {
     // Procesar cobro y cerrar mesa
     Route::post('/mesa/{mesa}/cobrar', [OrdenController::class, 'cobrar'])->name('cobrar');
     
+    // Procesar pago con datos del cliente (via AJAX)
+    Route::post('/mesa/{mesa}/procesar-pago', [OrdenController::class, 'procesarPago'])->name('procesar_pago');
+    
+    // Buscar clientes (via AJAX)
+    Route::get('/buscar-clientes', [OrdenController::class, 'buscarClientes'])->name('buscar_clientes');
+    
     // Obtener platos disponibles (para el modal - AJAX)
     Route::get('/platos-disponibles', [OrdenController::class, 'getPlatosDisponibles'])->name('platos_disponibles');
     
