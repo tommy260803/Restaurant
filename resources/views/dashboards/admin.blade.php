@@ -137,6 +137,12 @@
             <h2 class="title-restaurant">Bienvenido al Sistema</h2>
             <p class="subtitle mb-4">Panel Administrativo - Restaurante</p>
 
+            <div class="mt-3">
+                <a href="{{ route('reportes.index') }}" class="btn btn-outline-dark btn-sm">
+                    <i class="bi bi-graph-up me-1"></i> Ver reportes
+                </a>
+            </div>
+
             <p class="fs-5 mb-3 welcome-text">
                 ¡Hola, <strong>{{ $usuario->nombre_usuario }}</strong>!  
                 Te damos la bienvenida a la administración del restaurante 🍷✨

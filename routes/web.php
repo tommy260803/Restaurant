@@ -445,6 +445,15 @@ Route::prefix('ordenes')->name('ordenes.')->group(function () {
     
     // Volver a la vista anterior (NO cancela la orden, solo regresa)
     Route::get('/mesa/{mesa}/volver', [OrdenController::class, 'volver'])->name('volver');
+
+    // Rutas de reportes
+    Route::prefix('reportes')->name('reportes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReportesController::class, 'index'])->name('index');
+        Route::get('/pagos-por-dia', [\App\Http\Controllers\ReportesController::class, 'pagosPorDia'])->name('pagos_por_dia');
+        Route::get('/pagos-por-metodo', [\App\Http\Controllers\ReportesController::class, 'pagosPorMetodo'])->name('pagos_por_metodo');
+        Route::get('/reservas-por-dia', [\App\Http\Controllers\ReportesController::class, 'reservasPorDia'])->name('reservas_por_dia');
+        Route::get('/top-clientes', [\App\Http\Controllers\ReportesController::class, 'topClientes'])->name('top_clientes');
+    });
     
     // Cancelar orden y liberar mesa (SÍ cancela la orden)
     Route::post('/mesa/{mesa}/cancelar', [OrdenController::class, 'cancelar'])->name('cancelar');
