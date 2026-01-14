@@ -436,13 +436,37 @@ Route::prefix('ordenes')->name('ordenes.')->group(function () {
     
     // Buscar clientes (via AJAX)
     Route::get('/buscar-clientes', [OrdenController::class, 'buscarClientes'])->name('buscar_clientes');
+
+    // Crear cliente rápido (via AJAX) - usado por modal de pago
+    Route::post('/clientes', [OrdenController::class, 'crearClienteAjax'])->name('crear_cliente');
     
     // Obtener platos disponibles (para el modal - AJAX)
     Route::get('/platos-disponibles', [OrdenController::class, 'getPlatosDisponibles'])->name('platos_disponibles');
     
     // Volver a la vista anterior (NO cancela la orden, solo regresa)
     Route::get('/mesa/{mesa}/volver', [OrdenController::class, 'volver'])->name('volver');
+
+    // Rutas de reportes (dentro de ordenes)
+    Route::prefix('reportes')->name('reportes.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReportesController::class, 'index'])->name('index');
+        Route::get('/pagos-por-dia', [\App\Http\Controllers\ReportesController::class, 'pagosPorDia'])->name('pagos_por_dia');
+        Route::get('/pagos-por-metodo', [\App\Http\Controllers\ReportesController::class, 'pagosPorMetodo'])->name('pagos_por_metodo');
+        Route::get('/reservas-por-dia', [\App\Http\Controllers\ReportesController::class, 'reservasPorDia'])->name('reservas_por_dia');
+        Route::get('/top-clientes', [\App\Http\Controllers\ReportesController::class, 'topClientes'])->name('top_clientes');
+    });
+
+// alias de reportes movido a nivel público más abajo
+
     
     // Cancelar orden y liberar mesa (SÍ cancela la orden)
     Route::post('/mesa/{mesa}/cancelar', [OrdenController::class, 'cancelar'])->name('cancelar');
+});
+
+// Rutas alias públicas para reportes (acceso por /reportes y nombres reportes.*)
+Route::prefix('reportes')->name('reportes.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\ReportesController::class, 'index'])->name('index');
+    Route::get('/pagos-por-dia', [\App\Http\Controllers\ReportesController::class, 'pagosPorDia'])->name('pagos_por_dia');
+    Route::get('/pagos-por-metodo', [\App\Http\Controllers\ReportesController::class, 'pagosPorMetodo'])->name('pagos_por_metodo');
+    Route::get('/reservas-por-dia', [\App\Http\Controllers\ReportesController::class, 'reservasPorDia'])->name('reservas_por_dia');
+    Route::get('/top-clientes', [\App\Http\Controllers\ReportesController::class, 'topClientes'])->name('top_clientes');
 });

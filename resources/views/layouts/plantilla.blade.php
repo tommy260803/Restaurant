@@ -139,6 +139,14 @@
                     </ul>
                 </li>
 
+                <!-- REPORTES -->
+                <li class="custom-nav-item">
+                    <a href="{{ route('reportes.index') }}" class="custom-nav-link">
+                        <i class="bi bi-graph-up" style="font-size: 30px;"></i>
+                        <span class="custom-nav-label">Reportes</span>
+                    </a>
+                </li>
+
                 <!-- COMPRAS -->
                 <li class="custom-nav-item custom-dropdown-container">
                     <a href="#" class="custom-nav-link custom-dropdown-toggle primario">

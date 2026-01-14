@@ -555,12 +555,18 @@ class OrdenController extends Controller
             ]);
             
             // Crear registro de pago
+            $monto = (float) $request->monto;
+            if ($monto <= 0) {
+                // Si el monto no viene o es 0, usar el total actual de la orden
+                $monto = (float) $orden->fresh()->total;
+            }
+
             $pago = Pago::create([
                 'cliente_id' => $request->cliente_id,
                 'orden_id' => $orden->id,
                 'metodo' => $request->metodo,
                 'numero_operacion' => $request->numero_operacion,
-                'monto' => $request->monto,
+                'monto' => $monto,
                 'fecha' => now(),
                 'estado' => 'confirmado',
             ]);
@@ -624,6 +630,50 @@ class OrdenController extends Controller
             });
 
         return response()->json(['clientes' => $clientes]);
+    }
+
+    /**
+     * Crear cliente rápido (AJAX)
+     */
+    public function crearClienteAjax(Request $request)
+    {
+        $data = $request->only(['nombre','apellidoPaterno','apellidoMaterno','telefono','email']);
+
+        $validator = \Validator::make($data, [
+            'nombre' => 'required|string|max:150',
+            'apellidoPaterno' => 'required|string|max:40',
+            'apellidoMaterno' => 'nullable|string|max:40',
+            'telefono' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:150',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Datos inválidos', 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $cliente = Cliente::create([
+                'nombre' => $data['nombre'],
+                'apellidoPaterno' => $data['apellidoPaterno'],
+                'apellidoMaterno' => $data['apellidoMaterno'] ?? null,
+                'telefono' => $data['telefono'] ?? null,
+                'email' => $data['email'] ?? null,
+                'puntos' => 0,
+                'estado' => 'activo',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'idCliente' => $cliente->idCliente,
+                'nombre' => $cliente->nombre . ' ' . $cliente->apellidoPaterno . ' ' . $cliente->apellidoMaterno,
+                'telefono' => $cliente->telefono,
+                'email' => $cliente->email,
+                'puntos' => $cliente->puntos,
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error creando cliente: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
