@@ -73,6 +73,11 @@ DESCRIBE pagos;
    - Botones de método de pago
    - Campo de número de operación
 
+### Paso 3.1: Crear cliente desde el modal (si no existe)
+1. Si al buscar no aparecen resultados, presionar el botón "Crear cliente "<texto>"" o presionar "Nuevo".
+2. Completar al menos *Nombre* y *Apellido Paterno*, opcionalmente teléfono y email.
+3. Presionar "Guardar cliente". Al crear el cliente, se seleccionará automáticamente y se mostrará su información en el modal.
+4. Continuar con el flujo de pago (seleccionar método, procesar).
 ### Paso 4: Buscar Cliente
 1. En el modal, escribir en "Buscar cliente por nombre..."
 2. **Debe aparecer lista** de clientes (máx 10)

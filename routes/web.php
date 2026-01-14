@@ -436,6 +436,9 @@ Route::prefix('ordenes')->name('ordenes.')->group(function () {
     
     // Buscar clientes (via AJAX)
     Route::get('/buscar-clientes', [OrdenController::class, 'buscarClientes'])->name('buscar_clientes');
+
+    // Crear cliente rápido (via AJAX) - usado por modal de pago
+    Route::post('/clientes', [OrdenController::class, 'crearClienteAjax'])->name('crear_cliente');
     
     // Obtener platos disponibles (para el modal - AJAX)
     Route::get('/platos-disponibles', [OrdenController::class, 'getPlatosDisponibles'])->name('platos_disponibles');

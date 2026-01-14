@@ -41,8 +41,37 @@
                                 <i class="bi bi-plus-circle me-1"></i>Nuevo
                             </button>
                         </div>
+
+                        {{-- Lista de resultados y opción crear nuevo --}}
                         <div id="lista-clientes" class="position-absolute mt-1 w-100" style="background-color: #3a3a54; border: 1px solid #3a3a54; max-height: 200px; overflow-y: auto; display: none; z-index: 1000;"></div>
                         <input type="hidden" id="cliente_id" name="cliente_id">
+
+                        {{-- Formulario rápido para crear cliente --}}
+                        <div id="nuevo-cliente-form" class="mt-3" style="display: none; background-color: #3a3a54; padding: 12px; border-radius: 6px;">
+                            <h6 class="text-white mb-2">Crear Cliente Rápido</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="nuevo-nombre" placeholder="Nombre" style="background-color: #2f2f45; color: #fff;">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="nuevo-apellidoPaterno" placeholder="Apellido Paterno" style="background-color: #2f2f45; color: #fff;">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="nuevo-apellidoMaterno" placeholder="Apellido Materno" style="background-color: #2f2f45; color: #fff;">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" id="nuevo-telefono" placeholder="Teléfono" style="background-color: #2f2f45; color: #fff;">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <input type="email" class="form-control" id="nuevo-email" placeholder="Email (opcional)" style="background-color: #2f2f45; color: #fff;">
+                                </div>
+                            </div>
+
+                            <div class="mt-3 text-end">
+                                <button type="button" class="btn btn-outline-light me-2" id="btn-cancelar-nuevo-cliente">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="btn-guardar-nuevo-cliente">Guardar cliente</button>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Datos Cliente Seleccionado --}}
@@ -182,7 +211,18 @@
                 lista.empty();
                 
                 if (response.clientes.length === 0) {
-                    lista.html('<div class="p-2" style="color: #b8b8d1;">No hay resultados</div>');
+                    // Mostrar opción para crear nuevo cliente con el término buscado
+                    const buscarEsc = buscar.replace(/'/g, "\\'");
+                    lista.html(`
+                        <div class="p-2" style="color: #b8b8d1;">
+                            No hay resultados
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-success" onclick="mostrarFormularioNuevoCliente('${buscarEsc}')">
+                                    <i class="bi bi-plus-circle me-1"></i>Crear cliente "${buscarEsc}"
+                                </button>
+                            </div>
+                        </div>
+                    `);
                 } else {
                     response.clientes.forEach(cliente => {
                         lista.append(`
@@ -212,10 +252,83 @@
         $('#lista-clientes').hide();
     }
 
-    // Nuevo cliente
+    // Nuevo cliente: mostrar formulario inline
     $('#btn-nuevo-cliente').on('click', function() {
-        // Aquí podrías abrir un modal para crear un cliente rápido
-        alert('Función de crear cliente - Por implementar');
+        const buscar = $('#buscar-cliente').val().trim();
+        mostrarFormularioNuevoCliente(buscar);
+    });
+
+    function mostrarFormularioNuevoCliente(prefill = '') {
+        $('#nuevo-cliente-form').show();
+        $('#buscar-cliente').prop('disabled', true);
+        // Prefill nombre con el texto buscado si tiene al menos 2 caracteres
+        if (prefill && prefill.length >= 2) {
+            // intentar separar primer nombre y primer apellido
+            const parts = prefill.split(' ');
+            $('#nuevo-nombre').val(parts[0] || '');
+            $('#nuevo-apellidoPaterno').val(parts[1] || '');
+        }
+        // Scroll to form
+        setTimeout(() => {
+            $('#nuevo-nombre').focus();
+        }, 200);
+    }
+
+    // Cancelar crear cliente
+    $('#btn-cancelar-nuevo-cliente').on('click', function() {
+        $('#nuevo-cliente-form').hide();
+        $('#buscar-cliente').prop('disabled', false);
+    });
+
+    // Guardar nuevo cliente (AJAX)
+    $('#btn-guardar-nuevo-cliente').on('click', function() {
+        const nombre = $('#nuevo-nombre').val().trim();
+        const apellidoPaterno = $('#nuevo-apellidoPaterno').val().trim();
+        const apellidoMaterno = $('#nuevo-apellidoMaterno').val().trim();
+        const telefono = $('#nuevo-telefono').val().trim();
+        const email = $('#nuevo-email').val().trim();
+
+        if (!nombre || !apellidoPaterno) {
+            alert('Por favor ingresa al menos nombre y apellido paterno');
+            return;
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true).text('Guardando...');
+
+        $.ajax({
+            url: '/ordenes/clientes',
+            method: 'POST',
+            data: {
+                _token: "{{ csrf_token() }}",
+                nombre: nombre,
+                apellidoPaterno: apellidoPaterno,
+                apellidoMaterno: apellidoMaterno || null,
+                telefono: telefono || null,
+                email: email || null,
+            },
+            success: function(response) {
+                // Seleccionar cliente creado
+                seleccionarCliente(response.idCliente, response.nombre, response.telefono, response.email, response.puntos || 0);
+                mostrarAlerta('success', 'Cliente creado y seleccionado');
+                // Limpiar y ocultar formulario
+                $('#nuevo-nombre').val('');
+                $('#nuevo-apellidoPaterno').val('');
+                $('#nuevo-apellidoMaterno').val('');
+                $('#nuevo-telefono').val('');
+                $('#nuevo-email').val('');
+                $('#nuevo-cliente-form').hide();
+                $('#buscar-cliente').prop('disabled', false);
+                btn.prop('disabled', false).text('Guardar cliente');
+            },
+
+            error: function(xhr) {
+                let msg = 'Error al crear cliente';
+                if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                mostrarAlerta('danger', msg);
+                btn.prop('disabled', false).text('Guardar cliente');
+            }
+        });
     });
 
     // Checkbox sin cliente

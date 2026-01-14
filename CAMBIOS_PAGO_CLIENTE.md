@@ -100,7 +100,7 @@
 ```
 
 ## Próximos Pasos (Opcionales)
-- [ ] Crear modal para registrar cliente rápidamente en el pago
+- [x] Crear modal para registrar cliente rápidamente en el pago (ahora se puede crear cliente desde el modal de pago)
 - [ ] Agregar descuentos/puntos al pagar
 - [ ] Generar recibos/comprobantes
 - [ ] Integración con Culqi para pagos con tarjeta
