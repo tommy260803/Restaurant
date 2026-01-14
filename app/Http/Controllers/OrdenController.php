@@ -555,12 +555,18 @@ class OrdenController extends Controller
             ]);
             
             // Crear registro de pago
+            $monto = (float) $request->monto;
+            if ($monto <= 0) {
+                // Si el monto no viene o es 0, usar el total actual de la orden
+                $monto = (float) $orden->fresh()->total;
+            }
+
             $pago = Pago::create([
                 'cliente_id' => $request->cliente_id,
                 'orden_id' => $orden->id,
                 'metodo' => $request->metodo,
                 'numero_operacion' => $request->numero_operacion,
-                'monto' => $request->monto,
+                'monto' => $monto,
                 'fecha' => now(),
                 'estado' => 'confirmado',
             ]);
