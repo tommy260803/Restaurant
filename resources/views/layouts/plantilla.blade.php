@@ -309,6 +309,44 @@
                     </li>
                 @endrole
 
+                {{-- DELIVERY --}}
+@hasanyrole('administrador|cocinero|cajero')
+<li class="custom-nav-item custom-dropdown-container">
+    <a href="#" class="custom-nav-link custom-dropdown-toggle primario">
+        <i class='bx bx-cycling' style="font-size: 30px;"></i>
+
+        <span class="custom-nav-label">Delivery</span>
+        <i class='bx bx-chevron-down custom-dropdown-icon'></i>
+    </a>
+
+    <ul class="custom-dropdown-menu">
+        <li class="custom-nav-item">
+            <a class="custom-nav-link custom-dropdown-title">Delivery</a>
+        </li>
+        <hr>
+
+        {{-- DELIVERY - COCINA --}}
+        @hasanyrole('administrador|cocinero')
+        <li class="custom-nav-item">
+            <a href="{{ route('cocina.delivery.index') }}" class="custom-nav-link">
+                <i class='bx bx-restaurant me-2'></i> Cocina
+            </a>
+        </li>
+        @endhasanyrole
+
+        {{-- DELIVERY - GESTIÓN --}}
+        @hasanyrole('administrador|cajero')
+        <li class="custom-nav-item">
+            <a href="{{ route('admin.delivery.index') }}" class="custom-nav-link">
+                <i class='bx bx-cash-register me-2'></i> Gestión
+            </a>
+        </li>
+        @endhasanyrole
+
+    </ul>
+</li>
+@endhasanyrole
+
                 {{-- COCINA (visible para administrador y cocinero) --}}
                 @hasanyrole('administrador|cocinero')
                 <li class="custom-nav-item custom-dropdown-container">

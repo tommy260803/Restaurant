@@ -18,25 +18,53 @@
 
     <!-- Opciones principales -->
     <div class="row justify-content-center g-4 mb-4">
-        <!-- Delivery -->
-<div class="col-lg-3 col-md-4">
+        {{-- ================= DELIVERY ================= --}}
+
+{{-- DELIVERY - COCINA --}}
+@if(auth()->user()->hasRole('cocinero') || auth()->user()->hasRole('administrador'))
+<div class="col-lg-3 col-md-4 col-sm-6">
     <div class="card h-100 shadow border-0">
         <div class="card-body text-center p-4">
             <div class="service-icon mb-3">
                 <i class="fas fa-motorcycle fa-3x text-success"></i>
             </div>
-            <h5 class="card-title fw-bold mb-3">Delivery</h5>
+            <h5 class="card-title fw-bold mb-3">Delivery - Cocina</h5>
             <p class="card-text text-muted mb-4">
-                Pedidos delivery para cocina y seguimiento.
+                Pedidos delivery para preparación.
             </p>
             <div class="d-grid gap-2">
                 <a href="{{ route('cocina.delivery.index') }}" class="btn btn-success">
-                    <i class="fas fa-list me-2"></i>Ver Pedidos Delivery
+                    <i class="fas fa-utensils me-2"></i>Ver Pedidos
                 </a>
             </div>
         </div>
     </div>
 </div>
+@endif
+
+{{-- DELIVERY - GESTIÓN --}}
+@if(auth()->user()->hasRole('cajero') || auth()->user()->hasRole('administrador'))
+<div class="col-lg-3 col-md-4 col-sm-6">
+    <div class="card h-100 shadow border-0">
+        <div class="card-body text-center p-4">
+            <div class="service-icon mb-3">
+                <i class="fas fa-motorcycle fa-3x text-warning"></i>
+            </div>
+            <h5 class="card-title fw-bold mb-3">Delivery - Gestión</h5>
+            <p class="card-text text-muted mb-4">
+                Gestión y seguimiento de pedidos delivery.
+            </p>
+            <div class="d-grid gap-2">
+                <a href="{{ route('admin.delivery.index') }}" class="btn btn-warning">
+                    <i class="fas fa-cash-register me-2"></i>Gestionar Delivery
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+
 
         <!-- Mesas -->
         <div class="col-lg-3 col-md-4">
