@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Compras\Compra;
 use App\Models\Compras\DetalleCompra;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf; // ← AGREGAR ESTA LÍNEA
 
 class CompraController extends Controller
 {
@@ -110,8 +111,18 @@ class CompraController extends Controller
     public function comprobantePDF($id)
     {
         $compra = Compra::with('proveedor', 'detalles.ingrediente')->findOrFail($id);
-        $pdf = PDF::loadView('compras.comprobante_pdf', compact('compra'));
+        
+        // Generar el PDF con la vista
+        $pdf = Pdf::loadView('compras.comprobante_pdf', compact('compra'));
+        
+        // Configuraciones opcionales
+        $pdf->setPaper('a4', 'portrait');
+        
+        // Descargar el PDF
         return $pdf->download('compra_' . $compra->idCompra . '.pdf');
+        
+        // Si prefieres mostrarlo en el navegador en lugar de descargarlo:
+        // return $pdf->stream('compra_' . $compra->idCompra . '.pdf');
     }
 
     protected function recalcularTotal(Compra $compra)
