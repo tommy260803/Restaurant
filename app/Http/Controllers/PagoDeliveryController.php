@@ -6,6 +6,9 @@ use App\Models\DeliveryPedido;
 use App\Models\PagoDelivery;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PedidoEnRevision;
+
 class PagoDeliveryController extends Controller
 {
     // 💳 Mostrar formulario de pago
@@ -40,6 +43,11 @@ class PagoDeliveryController extends Controller
             'monto' => $request->monto,
             'estado' => 'pendiente',
         ]);
+        // 📩 ENVIAR CORREO: PEDIDO EN REVISIÓN 
+    Mail::to($pedido->email)->send(
+        new PedidoEnRevision($pedido)
+    );
+
 
         return redirect()->route('delivery.consultar')
             ->with('success', 'Pago registrado. Espera la confirmación del restaurante.')

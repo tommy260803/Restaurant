@@ -6,6 +6,10 @@ use App\Models\DeliveryPedido;
 use App\Models\PagoDelivery;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DeliveryConfirmado;
+
+
 class DeliveryAdminController extends Controller
 {
     // 📋 Listar todos los pedidos delivery
@@ -27,18 +31,29 @@ class DeliveryAdminController extends Controller
 
     // ✅ Confirmar pago
     public function confirmarPago($id)
-    {
-        $pedido = DeliveryPedido::with('pago')->findOrFail($id);
-        
-        if ($pedido->pago) {
-            $pedido->pago->update(['estado' => 'confirmado']);
-            $pedido->update(['estado' => 'confirmado']);
-            
-            // Aquí podrías enviar a cocina automáticamente
-        }
+{
+    $pedido = DeliveryPedido::with(['pago', 'platos.plato'])->findOrFail($id);
 
-        return back()->with('success', 'Pago confirmado. Pedido enviado a cocina.');
+    if ($pedido->pago) {
+        $pedido->pago->update(['estado' => 'confirmado']);
+        $pedido->update(['estado' => 'confirmado']);
+
+        // 🔥 ENVIAR CORREO
+        if ($pedido->email) {
+            try {
+                Mail::to($pedido->email)
+                    ->send(new DeliveryConfirmado($pedido));
+            } catch (\Exception $e) {
+                \Log::warning(
+                    'No se pudo enviar correo delivery ' . $pedido->id . ': ' . $e->getMessage()
+                );
+            }
+        }
     }
+
+    return back()->with('success', 'Pago confirmado y correo enviado al cliente.');
+}
+
 
     // ❌ Rechazar pago
     public function rechazarPago($id)
