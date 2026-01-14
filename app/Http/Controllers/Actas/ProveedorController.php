@@ -108,7 +108,7 @@ class ProveedorController extends Controller
             }
         }
 
-        return redirect()->route('mantenedor.proveedor.index')
+        return redirect()->route('proveedor.index')
             ->with('success', 'Proveedor registrado correctamente');
     }
 
@@ -187,7 +187,7 @@ class ProveedorController extends Controller
             }
         }
 
-        return redirect()->route('mantenedor.proveedor.index')
+        return redirect()->route('proveedor.index')
             ->with('success', 'Proveedor actualizado correctamente');
     }
 
@@ -197,7 +197,7 @@ class ProveedorController extends Controller
         $proveedor = Proveedor::findOrFail($id);
         $proveedor->update(['estado' => 'inactivo']);
 
-        return redirect()->route('mantenedor.proveedor.index')
+        return redirect()->route('proveedor.index')
             ->with('success', 'Proveedor desactivado correctamente');
     }
 
@@ -338,23 +338,27 @@ class ProveedorController extends Controller
         return view('mantenedor.proveedor.reporte', compact('estadisticas'));
     }
 
-    // 15. Exportar a PDF (comentado hasta tener la vista)
-    /*
+    // 15. Exportar a PDF
     public function exportarPDF()
     {
-        $proveedores = Proveedor::where('estado', 'activo')->get();
-        $pdf = PDF::loadView('mantenedor.proveedor.export-pdf', compact('proveedores'));
+        $proveedores = Proveedor::all();
+        $pdf = PDF::loadView('mantenedor.proveedor.exportarPDF', compact('proveedores'));
         return $pdf->download('proveedores_' . date('Y-m-d') . '.pdf');
     }
-    */
 
-    // 16. Exportar a Excel (comentado hasta tener el export)
-    /*
+    // 15B. Exportar a PDF Masivo (tabla completa)
+    public function exportarPDFMasivo()
+    {
+        $proveedores = Proveedor::all();
+        $pdf = PDF::loadView('mantenedor.proveedor.exportarPDFMasivo', compact('proveedores'));
+        return $pdf->download('reporte_proveedores_' . date('Y-m-d-His') . '.pdf');
+    }
+
+    // 16. Exportar a Excel
     public function exportarExcel()
     {
         return Excel::download(new ProveedorExport, 'proveedores_' . date('Y-m-d') . '.xlsx');
     }
-    */
 
     // 17. Búsqueda AJAX para selects dinámicos
     public function buscarAjax(Request $request)

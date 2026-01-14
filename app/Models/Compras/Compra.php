@@ -18,6 +18,6 @@ class Compra extends Model
 
     public function detalles()
     {
-        return $this->hasMany(DetalleCompra::class, 'idCompra');
+        return $this->hasMany(DetalleCompra::class, 'idCompra', 'idCompra');
     }
 }

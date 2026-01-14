@@ -13,54 +13,83 @@ class DetalleCompraController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'idCompra' => 'required|exists:compras,idCompra',
+        $data = $request->validate([
+            'idCompra' => 'required|exists:compra,idCompra',
             'idIngrediente' => 'required|exists:ingredientes,id',
             'cantidad' => 'required|numeric|min:0.01',
             'precio_unitario' => 'required|numeric|min:0.01',
         ]);
-        $detalle = DetalleCompra::create($request->all());
+        
+        // MySQL calcula subtotal automáticamente (columna generada)
+        $detalle = DetalleCompra::create([
+            'idCompra' => $data['idCompra'],
+            'idIngrediente' => $data['idIngrediente'],
+            'cantidad' => $data['cantidad'],
+            'cantidad_recibida' => 0,
+            'precio_unitario' => $data['precio_unitario'],
+        ]);
+        
         // Registrar lote si se envía
-        if ($request->filled('lote')) {
+        if ($request->filled('lote') && $request->filled('fecha_vencimiento') && $request->filled('cantidad_lote')) {
             IngredienteLote::create([
-                'ingrediente_id' => $request->idIngrediente,
+                'idIngrediente' => $data['idIngrediente'],
                 'idDetalleCompra' => $detalle->idDetalleCompra,
                 'lote' => $request->lote,
                 'fecha_vencimiento' => $request->fecha_vencimiento,
-                'cantidad' => $request->cantidad,
+                'cantidad' => $request->cantidad_lote,
             ]);
         }
+        
+        // Recalcular total de la compra
+        $compra = Compra::find($data['idCompra']);
+        if ($compra) {
+            $compra->total = $compra->detalles()->sum('subtotal');
+            $compra->save();
+        }
+        
         return back()->with('success', 'Detalle registrado');
     }
 
     public function update(Request $request, $id)
     {
         $detalle = DetalleCompra::findOrFail($id);
-        $request->validate([
+        $data = $request->validate([
             'cantidad_recibida' => 'required|numeric|min:0',
         ]);
-        $detalle->cantidad_recibida = $request->cantidad_recibida;
+        
+        $detalle->cantidad_recibida = $data['cantidad_recibida'];
         $detalle->save();
 
         // Actualizar stock del ingrediente
         $ingrediente = Ingrediente::find($detalle->idIngrediente);
         if ($ingrediente) {
-            $ingrediente->stock += $detalle->cantidad_recibida;
+            $ingrediente->stock += $data['cantidad_recibida'];
             $ingrediente->save();
 
             MovimientoInventario::create([
-                'ingrediente_id' => $ingrediente->id,
+                'idIngrediente' => $ingrediente->idIngrediente,
                 'tipo' => 'entrada',
-                'cantidad' => $detalle->cantidad_recibida,
-                'motivo' => 'Recepción parcial compra ID ' . $detalle->idCompra,
+                'cantidad' => $data['cantidad_recibida'],
+                'motivo' => 'Recepción parcial compra #' . $detalle->idCompra,
             ]);
         }
+        
         return back()->with('success', 'Cantidad recibida actualizada y stock ajustado');
     }
 
     public function destroy($id)
     {
-        DetalleCompra::destroy($id);
+        $detalle = DetalleCompra::findOrFail($id);
+        $idCompra = $detalle->idCompra;
+        $detalle->delete();
+        
+        // Recalcular total de la compra
+        $compra = Compra::find($idCompra);
+        if ($compra) {
+            $compra->total = $compra->detalles()->sum('subtotal');
+            $compra->save();
+        }
+        
         return back()->with('success', 'Detalle eliminado');
     }
 }

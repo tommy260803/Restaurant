@@ -13,7 +13,7 @@
             </div>
         @endif
 
-        <form action="{{ route('mantenedor.proveedor.update', $proveedor->idProveedor) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('proveedor.update', $proveedor->idProveedor) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="row">
@@ -244,7 +244,7 @@
                                 <button type="submit" class="btn btn-warning flex-fill">
                                     <i class="bi bi-save me-1"></i>Actualizar Proveedor
                                 </button>
-                                <a href="{{ route('mantenedor.proveedor.index') }}" class="btn btn-secondary flex-fill">
+                                <a href="{{ route('proveedor.index') }}" class="btn btn-secondary flex-fill">
                                     <i class="bi bi-arrow-left me-1"></i>Cancelar
                                 </a>
                             </div>
@@ -388,17 +388,17 @@
                             {{-- Acciones Adicionales --}}
                             <div class="d-grid gap-2">
                                 @if($proveedor->estado == 'bloqueado')
-                                    <a href="{{ route('mantenedor.proveedor.activar', $proveedor->idProveedor) }}" 
+                                    <a href="{{ route('proveedor.activar', $proveedor->idProveedor) }}" 
                                        class="btn btn-success btn-sm"
                                        onclick="return confirm('¿Reactivar este proveedor?')">
                                         <i class="fas fa-unlock me-1"></i>Reactivar Proveedor
                                     </a>
                                 @endif
-                                <a href="{{ route('mantenedor.proveedor.dashboard', $proveedor->idProveedor) }}" 
+                                <a href="{{ route('proveedor.dashboard', $proveedor->idProveedor) }}" 
                                    class="btn btn-info btn-sm">
                                     <i class="fas fa-chart-pie me-1"></i>Ver Dashboard
                                 </a>
-                                <a href="{{ route('mantenedor.proveedor.historial-financiero', $proveedor->idProveedor) }}" 
+                                <a href="{{ route('proveedor.historial', $proveedor->idProveedor) }}" 
                                    class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-history me-1"></i>Historial Compras
                                 </a>
@@ -612,7 +612,7 @@
 
         document.getElementById('confirmarEliminar').addEventListener('click', function() {
             if (archivoAEliminar && token) {
-                fetch(`{{ route('mantenedor.proveedor.eliminar-documento', $proveedor->idProveedor) }}`, {
+                fetch(`{{ route('proveedor.eliminarDocumento', $proveedor->idProveedor) }}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',

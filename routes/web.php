@@ -276,13 +276,21 @@ Route::middleware(['auth'])->group(function () {
     // RUTAS PARA ADMINISTRADOR Y ALMACENERO
     // ========================================
     Route::middleware(['role:administrador|almacenero'])->group(function () {
-        // Proveedores
+        // Proveedores - Rutas específicas primero (para evitar conflictos)
+        Route::get('proveedor/exportar/pdf', [ProveedorController::class, 'exportarPDF'])->name('proveedor.exportarPDF');
+        Route::get('proveedor/exportar/pdf-masivo', [ProveedorController::class, 'exportarPDFMasivo'])->name('proveedor.exportarPDFMasivo');
+        Route::get('proveedor/exportar/excel', [ProveedorController::class, 'exportarExcel'])->name('proveedor.exportarExcel');
+        Route::get('proveedor/reporte', [ProveedorController::class, 'reporte'])->name('proveedor.reporte');
+        
+        // Rutas de recurso
         Route::resource('proveedor', ProveedorController::class);
+        
+        // Rutas adicionales
         Route::post('proveedor/{id}/calificar', [ProveedorController::class, 'calificar'])->name('proveedor.calificar');
         Route::get('proveedor/{id}/historial', [ProveedorController::class, 'historialFinanciero'])->name('proveedor.historial');
         Route::get('proveedor/{id}/dashboard', [ProveedorController::class, 'dashboard'])->name('proveedor.dashboard');
-        Route::get('proveedor/exportar/pdf', [ProveedorController::class, 'exportarPDF'])->name('proveedor.exportarPDF');
-        Route::get('proveedor/exportar/excel', [ProveedorController::class, 'exportarExcel'])->name('proveedor.exportarExcel');
+        Route::put('proveedor/{id}/activar', [ProveedorController::class, 'activar'])->name('proveedor.activar');
+        Route::delete('proveedor/{id}/documento', [ProveedorController::class, 'eliminarDocumento'])->name('proveedor.eliminarDocumento');
 
         // Persona
         Route::resource('persona', PersonaController::class);
@@ -299,6 +307,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('compras', App\Http\Controllers\Compras\CompraController::class);
         Route::get('compras/{compra}/comprobante', [App\Http\Controllers\Compras\CompraController::class, 'comprobantePDF'])->name('compras.comprobantePDF');
         Route::post('compras/{compra}/recibir', [App\Http\Controllers\Compras\CompraController::class, 'recibir'])->name('compras.recibir');
+        
+        // Detalle de Compras
+        Route::post('detalle-compra', [App\Http\Controllers\Compras\DetalleCompraController::class, 'store'])->name('detalle-compra.store');
+        Route::put('detalle-compra/{id}', [App\Http\Controllers\Compras\DetalleCompraController::class, 'update'])->name('detalle-compra.update');
+        Route::delete('detalle-compra/{id}', [App\Http\Controllers\Compras\DetalleCompraController::class, 'destroy'])->name('detalle-compra.destroy');
 
         // Ingredientes
         Route::resource('ingredientes', App\Http\Controllers\Inventario\IngredienteController::class);

@@ -13,7 +13,7 @@
             </div>
         @endif
 
-        <form action="{{ route('mantenedor.proveedor.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('proveedor.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row">
                 <!-- Columna Izquierda: Datos del Proveedor -->
@@ -183,7 +183,7 @@
                                 <button type="submit" class="btn btn-success flex-fill">
                                     <i class="bi bi-save me-1"></i>Registrar Proveedor
                                 </button>
-                                <a href="{{ route('mantenedor.proveedor.index') }}" class="btn btn-secondary flex-fill">
+                                <a href="{{ route('proveedor.index') }}" class="btn btn-secondary flex-fill">
                                     <i class="bi bi-arrow-left me-1"></i>Cancelar
                                 </a>
                             </div>

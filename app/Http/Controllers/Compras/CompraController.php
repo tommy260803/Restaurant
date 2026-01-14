@@ -22,26 +22,36 @@ class CompraController extends Controller
             $query->where('fecha', '<=', $request->hasta);
         }
         $compras = $query->orderByDesc('fecha')->paginate(20);
-        return view('compras.index', compact('compras'));
+        $proveedores = \App\Models\Proveedor::where('estado', 'activo')->orderBy('nombre')->get();
+        return view('compras.index', compact('compras', 'proveedores'));
     }
 
     public function create()
     {
-        // ...cargar proveedores y ingredientes...
-        return view('compras.create');
+        $proveedores = \App\Models\Proveedor::where('estado', 'activo')->orderBy('nombre')->get();
+        $ingredientes = \App\Models\Inventario\Ingrediente::orderBy('nombre')->get();
+        return view('compras.create', compact('proveedores', 'ingredientes'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'idProveedor' => 'required|exists:proveedores,id',
+        $data = $request->validate([
+            'idProveedor' => 'required|exists:proveedor,idProveedor',
             'fecha' => 'required|date',
-            'descripcion' => 'required|string',
+            'descripcion' => 'required|string|max:500',
+            'estado' => 'nullable|in:pendiente,en_transito,recibida,anulada',
         ]);
-        $compra = Compra::create($request->all());
-        $compra->total = 0;
-        $compra->save();
-        return redirect()->route('compras.edit', $compra->idCompra);
+        
+        $compra = Compra::create([
+            'idProveedor' => $data['idProveedor'],
+            'fecha' => $data['fecha'],
+            'descripcion' => $data['descripcion'],
+            'total' => 0,
+            'estado' => $data['estado'] ?? 'pendiente',
+        ]);
+        
+        return redirect()->route('compras.edit', $compra->idCompra)
+            ->with('success', 'Compra creada. Ahora agrega los detalles.');
     }
 
     public function show($id)
@@ -53,14 +63,29 @@ class CompraController extends Controller
     public function edit($id)
     {
         $compra = Compra::with('detalles.ingrediente')->findOrFail($id);
-        // ...cargar proveedores y ingredientes...
-        return view('compras.edit', compact('compra'));
+        $proveedores = \App\Models\Proveedor::where('estado', 'activo')->orderBy('nombre')->get();
+        $ingredientes = \App\Models\Inventario\Ingrediente::orderBy('nombre')->get();
+        return view('compras.edit', compact('compra', 'proveedores', 'ingredientes'));
     }
 
     public function update(Request $request, $id)
     {
         $compra = Compra::findOrFail($id);
-        $compra->update($request->all());
+        
+        $data = $request->validate([
+            'idProveedor' => 'required|exists:proveedor,idProveedor',
+            'fecha' => 'required|date',
+            'descripcion' => 'required|string|max:500',
+            'estado' => 'nullable|in:pendiente,en_transito,recibida,anulada',
+        ]);
+        
+        $compra->update([
+            'idProveedor' => $data['idProveedor'],
+            'fecha' => $data['fecha'],
+            'descripcion' => $data['descripcion'],
+            'estado' => $data['estado'] ?? $compra->estado,
+        ]);
+        
         $this->recalcularTotal($compra);
         return redirect()->route('compras.show', $compra->idCompra)->with('success', 'Compra actualizada');
     }
@@ -85,8 +110,8 @@ class CompraController extends Controller
     public function comprobantePDF($id)
     {
         $compra = Compra::with('proveedor', 'detalles.ingrediente')->findOrFail($id);
-        // ...genera PDF con dompdf o similar...
-        return view('compras.comprobante_pdf', compact('compra'));
+        $pdf = PDF::loadView('compras.comprobante_pdf', compact('compra'));
+        return $pdf->download('compra_' . $compra->idCompra . '.pdf');
     }
 
     protected function recalcularTotal(Compra $compra)

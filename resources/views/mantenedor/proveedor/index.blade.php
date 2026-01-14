@@ -4,784 +4,526 @@
 @section('titulo', 'Gestión de Proveedores')
 
 @section('contenido')
-<div class="container-fluid mt-3 px-4 animate__animated animate__fadeIn restaurant-theme">
+<div class="container-fluid mt-4 px-4">
 
-    {{-- Header con diseño de restaurante --}}
-    <div class="mb-5">
-        <div class="restaurant-header p-4 rounded-4 mb-4 position-relative overflow-hidden">
-            <div class="restaurant-pattern"></div>
-            <div class="row align-items-center position-relative">
+    {{-- Header --}}
+    <div class="mb-4">
+        <div class="page-header p-4 rounded-3 mb-4">
+            <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="restaurant-title mb-3">
-                        <span class="chef-icon">👨‍🍳</span>
-                        Nuestros Proveedores
+                    <h1 class="page-title mb-2">
+                        <i class="fas fa-truck me-2"></i>
+                        Gestión de Proveedores
                     </h1>
-                    <p class="restaurant-subtitle mb-0">Socios estratégicos que nos ayudan a crear experiencias culinarias excepcionales</p>
+                    <p class="page-subtitle mb-0">Administra y controla todos los proveedores del sistema</p>
                 </div>
                 <div class="col-md-4 text-end">
-                    <div class="restaurant-stats">
-                        <div class="stat-item">
-                            <span class="stat-number">{{ $proveedores->total() }}</span>
-                            <span class="stat-label">Proveedores</span>
-                        </div>
+                    <div class="stats-badge">
+                        <span class="stat-number">{{ $proveedores->total() }}</span>
+                        <span class="stat-label">Total</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Botones de acción con estilo restaurante --}}
-        <div class="d-flex flex-wrap gap-3 justify-content-center justify-md-end mb-4">
-            <a href="{{ route('proveedor.exportarPDF') }}" 
-               class="btn-restaurant btn-restaurant-red" target="_blank">
-                <i class="fas fa-file-pdf"></i>
-                <span>Descargar PDF</span>
+        {{-- Botones de acción --}}
+        <div class="d-flex flex-wrap gap-2 justify-content-end mb-4">
+            <a href="{{ route('proveedor.exportarPDF') }}" class="btn btn-outline-danger" target="_blank">
+                <i class="fas fa-file-pdf me-1"></i> Exportar PDF
             </a>
-            <a href="{{ route('proveedor.exportarExcel') }}" 
-               class="btn-restaurant btn-restaurant-green" target="_blank">
-                <i class="fas fa-file-excel"></i>
-                <span>Descargar Excel</span>
+            <a href="{{ route('proveedor.exportarExcel') }}" class="btn btn-outline-success" target="_blank">
+                <i class="fas fa-file-excel me-1"></i> Exportar Excel
             </a>
-            <a href="{{ route('proveedor.create') }}" 
-               class="btn-restaurant btn-restaurant-primary">
-                <i class="fas fa-plus-circle"></i>
-                <span>Nuevo Proveedor</span>
+            <a href="{{ route('proveedor.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Nuevo Proveedor
             </a>
         </div>
     </div>
 
-    {{-- Filtros con diseño moderno --}}
-    <div class="restaurant-filters mb-5">
-        <form method="GET" class="d-flex flex-wrap gap-3 justify-content-center justify-md-end">
-            <div class="search-group">
-                <i class="fas fa-search search-icon"></i>
-                <input name="buscar" type="search" placeholder="Buscar proveedor..." 
-                       class="form-control-restaurant" value="{{ $buscar ?? '' }}">
-            </div>
-            <div class="filter-group">
-                <select name="estado" class="form-select-restaurant">
-                    <option value="">🍽️ Todos los estados</option>
-                    <option value="activo" {{ ($estado ?? '') == 'activo' ? 'selected' : '' }}>✅ Activo</option>
-                    <option value="inactivo" {{ ($estado ?? '') == 'inactivo' ? 'selected' : '' }}>⏸️ Inactivo</option>
-                    <option value="bloqueado" {{ ($estado ?? '') == 'bloqueado' ? 'selected' : '' }}>🚫 Bloqueado</option>
-                </select>
-            </div>
-            <button type="submit" class="btn-restaurant btn-restaurant-search">
-                <i class="fas fa-filter"></i>
-                Filtrar
-            </button>
-        </form>
+    {{-- Filtros --}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small text-muted">Buscar</label>
+                    <input name="buscar" type="search" class="form-control" 
+                           placeholder="Nombre, email o RUC" value="{{ $buscar ?? '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" {{ ($estado ?? '') == 'activo' ? 'selected' : '' }}>Activo</option>
+                        <option value="inactivo" {{ ($estado ?? '') == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+                        <option value="bloqueado" {{ ($estado ?? '') == 'bloqueado' ? 'selected' : '' }}>Bloqueado</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> Buscar
+                    </button>
+                    <a href="{{ route('proveedor.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo me-1"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 
-    {{-- Mensaje de éxito con estilo restaurante --}}
+    {{-- Mensajes --}}
     @if (session('success'))
-        <div id="mensaje" class="alert-restaurant alert-success mb-4">
-            <i class="fas fa-check-circle"></i>
-            <strong>¡Perfecto!</strong> {{ session('success') }}
+        <div id="mensaje" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    {{-- Cards de proveedores estilo restaurante --}}
+    {{-- Cards de proveedores --}}
     <div class="row g-4">
         @forelse($proveedores as $item)
             <div class="col-12 col-md-6 col-xl-4">
-                <div class="provider-card">
-                    <div class="card-header">
-                        <div class="provider-avatar">
-                            <span>{{ strtoupper(substr($item->nombre, 0, 2)) }}</span>
-                        </div>
-                        <div class="provider-info">
-                            <h5 class="provider-name">{{ $item->nombre }} {{ $item->apellidoPaterno }}</h5>
-                            <p class="provider-subtitle">{{ $item->apellidoMaterno }}</p>
-                        </div>
-                        <div class="provider-status">
-                            @if ($item->estado === 'activo')
-                                <span class="badge-restaurant badge-success">🟢 Activo</span>
-                            @elseif ($item->estado === 'bloqueado')
-                                <span class="badge-restaurant badge-danger">🔴 Bloqueado</span>
-                            @else
-                                <span class="badge-restaurant badge-secondary">⚪ Inactivo</span>
-                            @endif
+                <div class="card provider-card h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <div class="d-flex align-items-center">
+                            <div class="provider-avatar me-3">
+                                <span>{{ strtoupper(substr($item->nombre, 0, 2)) }}</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">{{ $item->nombre }} {{ $item->apellidoPaterno }}</h6>
+                                <small class="text-muted">{{ $item->apellidoMaterno }}</small>
+                            </div>
+                            <div>
+                                @if ($item->estado === 'activo')
+                                    <span class="badge bg-success">Activo</span>
+                                @elseif ($item->estado === 'bloqueado')
+                                    <span class="badge bg-danger">Bloqueado</span>
+                                @else
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
                     <div class="card-body">
-                        <div class="contact-info">
-                            <div class="info-item">
-                                <i class="fas fa-phone-alt"></i>
-                                <span>{{ $item->telefono ?: 'No registrado' }}</span>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-phone text-primary me-2" style="width: 20px;"></i>
+                                <small>{{ $item->telefono ?: 'No registrado' }}</small>
                             </div>
-                            <div class="info-item">
-                                <i class="fas fa-envelope"></i>
-                                <span>{{ $item->email ?: 'No registrado' }}</span>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-envelope text-primary me-2" style="width: 20px;"></i>
+                                <small>{{ $item->email ?: 'No registrado' }}</small>
                             </div>
-                            <div class="info-item">
-                                <i class="fas fa-id-card"></i>
-                                <span>RUC: {{ $item->ruc ?: 'No registrado' }}</span>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-id-card text-primary me-2" style="width: 20px;"></i>
+                                <small>{{ $item->rucProveedor ?: 'Sin RUC' }}</small>
                             </div>
                         </div>
 
-                        <div class="rating-section">
-                            <h6 class="rating-title">🌟 Evaluación del Proveedor</h6>
-                            <div class="rating-grid">
-                                <div class="rating-item">
-                                    <span class="rating-label">Puntualidad</span>
-                                    <span class="rating-value">{{ $item->puntualidad ?? '-' }}</span>
+                        @if($item->puntualidad || $item->calidad || $item->precio)
+                        <div class="border-top pt-3">
+                            <small class="text-muted d-block mb-2">Evaluación</small>
+                            <div class="row g-2 text-center">
+                                <div class="col-4">
+                                    <div class="eval-box">
+                                        <div class="eval-value">{{ $item->puntualidad ?? '-' }}</div>
+                                        <small class="text-muted">Puntual.</small>
+                                    </div>
                                 </div>
-                                <div class="rating-item">
-                                    <span class="rating-label">Calidad</span>
-                                    <span class="rating-value">{{ $item->calidad ?? '-' }}</span>
+                                <div class="col-4">
+                                    <div class="eval-box">
+                                        <div class="eval-value">{{ $item->calidad ?? '-' }}</div>
+                                        <small class="text-muted">Calidad</small>
+                                    </div>
                                 </div>
-                                <div class="rating-item">
-                                    <span class="rating-label">Precio</span>
-                                    <span class="rating-value">{{ $item->precio ?? '-' }}</span>
+                                <div class="col-4">
+                                    <div class="eval-box">
+                                        <div class="eval-value">{{ $item->precio ?? '-' }}</div>
+                                        <small class="text-muted">Precio</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
 
-                    <div class="card-actions">
-                        <a href="{{ route('proveedor.edit', $item->idProveedor) }}" 
-                           class="btn-action btn-edit" title="Editar información">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{{ route('proveedor.dashboard', $item->idProveedor) }}" 
-                           class="btn-action btn-dashboard" title="Ver estadísticas">
-                            <i class="fas fa-chart-pie"></i>
-                        </a>
-                        <a href="{{ route('proveedor.historial', $item->idProveedor) }}" 
-                           class="btn-action btn-history" title="Ver historial">
-                            <i class="fas fa-history"></i>
-                        </a>
-                        <a href="#" onclick="mostrarModalCalificar({{ $item->idProveedor }})" 
-                           class="btn-action btn-rate" title="Calificar proveedor">
-                            <i class="fas fa-star"></i>
-                        </a>
-                        @if ($item->estado === 'activo')
-                            <form action="{{ route('proveedor.destroy', $item->idProveedor) }}" 
-                                  method="POST" style="display: inline;"
-                                  onsubmit="return confirm('¿Seguro que quieres desactivar este proveedor?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-action btn-delete" title="Desactivar proveedor">
-                                    <i class="fas fa-ban"></i>
-                                </button>
-                            </form>
-                        @endif
+                    <div class="card-footer bg-light border-top-0">
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <a href="{{ route('proveedor.edit', $item->idProveedor) }}" 
+                               class="btn btn-sm btn-outline-primary" title="Editar proveedor">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{{ route('proveedor.dashboard', $item->idProveedor) }}" 
+                               class="btn btn-sm btn-outline-info" title="Ver estadísticas">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                            <a href="{{ route('proveedor.historial', $item->idProveedor) }}" 
+                               class="btn btn-sm btn-outline-secondary" title="Historial de compras">
+                                <i class="fas fa-history"></i> Historial
+                            </a>
+                            <a href="javascript:void(0)" onclick="mostrarModalCalificar({{ $item->idProveedor }})" 
+                               class="btn btn-sm btn-outline-warning" title="Calificar proveedor">
+                                <i class="fas fa-star"></i> Calificar
+                            </a>
+                            @if ($item->estado === 'activo')
+                                <form action="{{ route('proveedor.destroy', $item->idProveedor) }}" 
+                                      method="POST" class="d-inline"
+                                      onsubmit="return confirm('¿Desactivar este proveedor?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar proveedor">
+                                        <i class="fas fa-times"></i> Desactivar
+                                    </button>
+                                </form>
+
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         @empty
             <div class="col-12">
-                <div class="empty-state">
-                    <div class="empty-icon">🍽️</div>
-                    <h4>No hay proveedores disponibles</h4>
-                    <p>Comienza agregando tu primer proveedor para gestionar tu restaurante</p>
-                    <a href="{{ route('proveedor.create') }}" class="btn-restaurant btn-restaurant-primary">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Agregar Primer Proveedor</span>
-                    </a>
+                <div class="card text-center py-5">
+                    <div class="card-body">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No se encontraron proveedores</h5>
+                        <p class="text-muted mb-3">Intenta ajustar los filtros o crear un nuevo proveedor</p>
+                        <a href="{{ route('proveedor.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Crear Proveedor
+                        </a>
+                    </div>
                 </div>
             </div>
         @endforelse
     </div>
 
-    {{-- Paginación con estilo restaurante --}}
-    <div class="mt-5 d-flex justify-content-center">
-        <div class="pagination-restaurant">
-            {{ $proveedores->links() }}
-        </div>
+    {{-- Paginación --}}
+    <div class="mt-4">
+        {{ $proveedores->links() }}
     </div>
 </div>
 
 <style>
-/* Tema principal del restaurante */
-.restaurant-theme {
-    background: linear-gradient(135deg, #fef7ed 0%, #fed7aa 100%);
-    min-height: 100vh;
-}
-
-/* Header del restaurante */
-.restaurant-header {
-    background: linear-gradient(135deg, #ea580c, #dc2626);
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 10px 30px rgba(234, 88, 12, 0.3);
-    border: 3px solid #fed7aa;
 }
 
-.restaurant-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
-        radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 2px, transparent 2px);
-    background-size: 50px 50px;
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
 }
 
-.restaurant-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    margin: 0;
-}
-
-.chef-icon {
-    font-size: 3rem;
-    margin-right: 15px;
-    display: inline-block;
-    animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-10px); }
-    60% { transform: translateY(-5px); }
-}
-
-.restaurant-subtitle {
-    font-size: 1.1rem;
+.page-subtitle {
     opacity: 0.9;
-    font-weight: 300;
 }
 
-.restaurant-stats {
-    text-align: center;
-    background: rgba(255,255,255,0.2);
-    border-radius: 15px;
-    padding: 20px;
+.stats-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px 30px;
+    border-radius: 10px;
     backdrop-filter: blur(10px);
 }
 
 .stat-number {
     display: block;
-    font-size: 2.5rem;
-    font-weight: 900;
-    line-height: 1;
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .stat-label {
     font-size: 0.9rem;
-    opacity: 0.8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Botones estilo restaurante */
-.btn-restaurant {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid transparent;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.btn-restaurant:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-
-.btn-restaurant-primary {
-    background: linear-gradient(135deg, #ea580c, #dc2626);
-    color: white;
-}
-
-.btn-restaurant-red {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    color: white;
-}
-
-.btn-restaurant-green {
-    background: linear-gradient(135deg, #059669, #047857);
-    color: white;
-}
-
-.btn-restaurant-search {
-    background: linear-gradient(135deg, #7c3aed, #6366f1);
-    color: white;
-}
-
-/* Filtros con estilo moderno */
-.restaurant-filters {
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 2px solid #fed7aa;
-}
-
-.search-group {
-    position: relative;
-    min-width: 280px;
-}
-
-.search-icon {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    z-index: 2;
-}
-
-.form-control-restaurant {
-    border: 2px solid #e5e7eb;
-    border-radius: 25px;
-    padding: 12px 15px 12px 45px;
-    font-size: 0.95rem;
-    transition: all 0.3s;
-    background: #f9fafb;
-}
-
-.form-control-restaurant:focus {
-    border-color: #ea580c;
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
-    background: white;
-}
-
-.form-select-restaurant {
-    border: 2px solid #e5e7eb;
-    border-radius: 25px;
-    padding: 12px 20px;
-    font-size: 0.95rem;
-    background: #f9fafb;
-    transition: all 0.3s;
-    min-width: 200px;
-}
-
-.form-select-restaurant:focus {
-    border-color: #ea580c;
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
-    background: white;
-}
-
-/* Cards de proveedores */
-.provider-card {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 2px solid #fed7aa;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.provider-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    border-color: #ea580c;
-}
-
-.card-header {
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    color: white;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    position: relative;
-    overflow: hidden;
-}
-
-.card-header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-.provider-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 1.5rem;
-    backdrop-filter: blur(10px);
-    border: 3px solid rgba(255,255,255,0.3);
-    z-index: 1;
-    position: relative;
-}
-
-.provider-info {
-    flex: 1;
-    z-index: 1;
-    position: relative;
-}
-
-.provider-name {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.provider-subtitle {
-    font-size: 0.9rem;
     opacity: 0.9;
-    margin: 0;
-    font-weight: 400;
 }
 
-.provider-status {
-    z-index: 1;
-    position: relative;
-}
-
-.badge-restaurant {
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border: 2px solid rgba(255,255,255,0.3);
-    backdrop-filter: blur(10px);
-}
-
-.badge-success {
-    background: rgba(34, 197, 94, 0.9);
-    color: white;
-}
-
-.badge-danger {
-    background: rgba(239, 68, 68, 0.9);
-    color: white;
-}
-
-.badge-secondary {
-    background: rgba(107, 114, 128, 0.9);
-    color: white;
-}
-
-.card-body {
-    padding: 25px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 15px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border-left: 4px solid #ea580c;
-}
-
-.info-item i {
-    color: #ea580c;
-    width: 20px;
-    text-align: center;
-}
-
-.info-item span {
-    font-size: 0.9rem;
-    color: #374151;
-    font-weight: 500;
-}
-
-.rating-section {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border-radius: 15px;
-    padding: 20px;
-    border: 2px solid #f59e0b;
-}
-
-.rating-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-    color: #92400e;
-    text-align: center;
-}
-
-.rating-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.rating-item {
-    text-align: center;
-    background: rgba(255,255,255,0.7);
-    border-radius: 10px;
-    padding: 10px 5px;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.rating-label {
-    display: block;
-    font-size: 0.75rem;
-    color: #92400e;
-    font-weight: 600;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-.rating-value {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: #b45309;
-}
-
-.card-actions {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    padding: 20px;
-    background: #f8fafc;
-    border-top: 2px solid #e5e7eb;
-}
-
-.btn-action {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
+.provider-card {
+    transition: all 0.3s ease;
     border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    transition: all 0.3s;
-    text-decoration: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.btn-action:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+.provider-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-.btn-edit { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-.btn-dashboard { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
-.btn-history { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
-.btn-rate { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-.btn-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-
-/* Estado vacío */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 2px solid #fed7aa;
-}
-
-.empty-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-.empty-state h4 {
-    color: #374151;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    color: #6b7280;
-    margin-bottom: 30px;
-}
-
-/* Alerta estilo restaurante */
-.alert-restaurant {
-    border-radius: 15px;
-    padding: 20px;
-    border: 2px solid;
+.provider-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 15px;
-    font-weight: 500;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
-.alert-success {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    border-color: #10b981;
-    color: #047857;
+.eval-box {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
-.alert-restaurant i {
-    font-size: 1.5rem;
+.eval-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.card-footer .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+    white-space: nowrap;
+}
+
+.card-footer .btn-sm i {
+    margin-right: 0.4rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .restaurant-title {
-        font-size: 2rem;
+    .page-title {
+        font-size: 1.5rem;
     }
     
-    .chef-icon {
-        font-size: 2.5rem;
+    .stats-badge {
+        padding: 10px 20px;
     }
     
-    .btn-restaurant span {
-        display: none;
+    .stat-number {
+        font-size: 1.5rem;
     }
     
-    .btn-restaurant {
-        padding: 12px;
-        min-width: auto;
-    }
-    
-    .search-group {
-        min-width: 100%;
-    }
-    
-    .rating-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .card-actions {
-        flex-wrap: wrap;
-        gap: 10px;
+    .card-footer .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
     }
 }
+</style>
+</div>
 
-/* Animaciones adicionales */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+{{-- Modal Calificar Proveedor --}}
+<div class="modal fade" id="modalCalificar" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-star me-2"></i>Calificar Proveedor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formCalificar" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Puntualidad</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            @for($i = 1; $i <= 5; $i++)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" 
+                                           name="puntualidad" id="puntualidad{{ $i }}" 
+                                           value="{{ $i }}" {{ $i == 3 ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="puntualidad{{ $i }}">
+                                        {{ str_repeat('⭐', $i) }}
+                                    </label>
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Calidad</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            @for($i = 1; $i <= 5; $i++)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" 
+                                           name="calidad" id="calidad{{ $i }}" 
+                                           value="{{ $i }}" {{ $i == 3 ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="calidad{{ $i }}">
+                                        {{ str_repeat('⭐', $i) }}
+                                    </label>
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Precio</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            @for($i = 1; $i <= 5; $i++)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" 
+                                           name="precio" id="precio{{ $i }}" 
+                                           value="{{ $i }}" {{ $i == 3 ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="precio{{ $i }}">
+                                        {{ str_repeat('⭐', $i) }}
+                                    </label>
+                                </div>
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i> Guardar Calificación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-cerrar alertas
+    setTimeout(() => {
+        const mensaje = document.getElementById('mensaje');
+        if (mensaje) {
+            const alert = bootstrap.Alert.getOrCreateInstance(mensaje);
+            alert.close();
+        }
+    }, 4000);
+
+    // Modal de Calificación
+    function mostrarModalCalificar(proveedorId) {
+        console.log('✅ Función ejecutada con ID:', proveedorId);
+        
+        const action = '{{ route("proveedor.calificar", ":id") }}'.replace(':id', proveedorId);
+        const form = document.getElementById('formCalificar');
+        
+        if (!form) {
+            console.error('❌ Formulario no encontrado');
+            return;
+        }
+        
+        form.action = action;
+        console.log('✅ Action del form:', action);
+
+        // Reset a valores por defecto (3 estrellas)
+        ['puntualidad', 'calidad', 'precio'].forEach(nombre => {
+            for (let i = 1; i <= 5; i++) {
+                const radio = document.getElementById(`${nombre}${i}`);
+                if (radio) radio.checked = (i === 3);
+            }
+        });
+
+        // Mostrar el modal
+        const modalElement = document.getElementById('modalCalificar');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            console.log('✅ Modal mostrado');
+        } else {
+            console.error('❌ Modal no encontrado');
+        }
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+</script>
+
+<style>
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    opacity: 0.9;
+}
+
+.stats-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px 30px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
 }
 
 .provider-card {
-    animation: fadeInUp 0.6s ease-out forwards;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.provider-card:nth-child(1) { animation-delay: 0.1s; }
-.provider-card:nth-child(2) { animation-delay: 0.2s; }
-.provider-card:nth-child(3) { animation-delay: 0.3s; }
-.provider-card:nth-child(4) { animation-delay: 0.4s; }
-.provider-card:nth-child(5) { animation-delay: 0.5s; }
-.provider-card:nth-child(6) { animation-delay: 0.6s; }
-</style>
-@endsection
+.provider-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
 
-@section('script')
-<script>
-    // Remover mensaje después de 3 segundos con animación
-    setTimeout(() => {
-        let mensaje = document.getElementById('mensaje');
-        if (mensaje) {
-            mensaje.style.transition = 'all 0.5s ease-out';
-            mensaje.style.transform = 'translateX(100%)';
-            mensaje.style.opacity = '0';
-            setTimeout(() => mensaje.remove(), 500);
-        }
-    }, 3000);
+.provider-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
 
-    // Animación de entrada progresiva para las cards
-    function animateCards() {
-        const cards = document.querySelectorAll('.provider-card');
-        cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(50px)';
-            setTimeout(() => {
-                card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
+.eval-box {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.eval-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.card-footer .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+    white-space: nowrap;
+}
+
+.card-footer .btn-sm i {
+    margin-right: 0.4rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.5rem;
     }
+    
+    .stats-badge {
+        padding: 10px 20px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .card-footer .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
+</style>
 
-    // Ejecutar animaciones cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-        animateCards();
-        
-        // Efecto de hover mejorado para las cards
-        const cards = document.querySelectorAll('.provider-card');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px) scale(1.02)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0) scale(1)';
-            });
-        });
-        
-        // Efecto de ripple en botones
-        const buttons = document.querySelectorAll('.btn-restaurant, .btn-action');
-        buttons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                const ripple = document.createElement('div');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size / 2;
-                const y = e.clientY - rect.top - size / 2;
-                
-                ripple.style.cssText = `
-                    position: absolute;
-                    width: ${size}px;
-                    height: ${size}px;
-                    left: ${x}px;
-                    top: ${y}px;
-                    background: rgba(255,255,255,0.3);
-                    border-radius: 50%;
-                    transform: scale(0);
-                    animation: ripple 0.6s linear;
-                    pointer-events: none;
-                `;
-                
-                this.style.position = 'relative';
-                this.style.overflow = 'hidden';
-                this.appendChild(ripple);
-                
-                setTimeout(() => ripple.remove(), 600);
-            });
-        });
-    });
-
-    // Agregar estilos para el efecto ripple
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-</script>
 @endsection
