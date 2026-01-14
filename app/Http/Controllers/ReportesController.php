@@ -25,7 +25,7 @@ class ReportesController extends Controller
 
         $pagos = Pago::select(DB::raw("DATE(fecha) as fecha"), DB::raw('SUM(monto) as total'))
             ->where('fecha', '>=', $inicio)
-            ->where('estado', 'confirmado')
+            ->whereIn('estado', ['pendiente','confirmado'])
             ->groupBy('fecha')
             ->orderBy('fecha')
             ->get()
@@ -45,7 +45,7 @@ class ReportesController extends Controller
     public function pagosPorMetodo()
     {
         $data = Pago::select('metodo', DB::raw('SUM(monto) as total'))
-            ->where('estado', 'confirmado')
+            ->whereIn('estado', ['pendiente','confirmado'])
             ->groupBy('metodo')
             ->get();
 
@@ -79,8 +79,8 @@ class ReportesController extends Controller
     {
         $data = Cliente::select('cliente.idCliente', DB::raw("CONCAT(cliente.nombre,' ',cliente.apellidoPaterno,' ',COALESCE(cliente.apellidoMaterno,'')) as nombre"), DB::raw('SUM(pagos.monto) as total'))
             ->join('pagos', 'cliente.idCliente', '=', 'pagos.cliente_id')
-            ->where('pagos.estado', 'confirmado')
-            ->groupBy('cliente.idCliente')
+            ->whereIn('pagos.estado', ['pendiente','confirmado'])
+            ->groupBy('cliente.idCliente', 'cliente.nombre', 'cliente.apellidoPaterno', 'cliente.apellidoMaterno')
             ->orderByDesc('total')
             ->limit(10)
             ->get();

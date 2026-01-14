@@ -138,7 +138,7 @@
             <p class="subtitle mb-4">Panel Administrativo - Restaurante</p>
 
             <div class="mt-3">
-                <a href="{{ route('reportes.index') }}" class="btn btn-outline-dark btn-sm">
+                <a href="{{ route('ordenes.reportes.index') }}" class="btn btn-outline-dark btn-sm">
                     <i class="bi bi-graph-up me-1"></i> Ver reportes
                 </a>
             </div>
