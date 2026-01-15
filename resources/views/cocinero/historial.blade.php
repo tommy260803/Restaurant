@@ -71,11 +71,65 @@
           </thead>
           <tbody>
             @forelse($pedidos as $p)
+              @php
+                // Determinar el tipo de pedido
+                $esOrden = $p->tipo === 'orden';
+                
+                // Obtener fecha
+                $fecha = '—';
+                if ($esOrden) {
+                  $fecha = $p->created_at?->format('d/m/Y') ?? '—';
+                } else {
+                  $fecha = $p->reserva?->fecha_reserva?->format('d/m/Y') ?? '—';
+                }
+                
+                // Obtener mesa
+                $mesaNumero = null;
+                if ($esOrden) {
+                  $mesaNumero = $p->orden?->mesa?->numero;
+                } else {
+                  $mesaNumero = $p->reserva?->mesa?->numero;
+                }
+                
+                // Obtener nombre del cliente
+                $nombreCliente = '—';
+                if ($esOrden) {
+                  // Para órdenes directas, buscar si hay reserva activa
+                  $nombreCliente = 'Orden Directa';
+                  if ($p->orden && $p->orden->mesa) {
+                    $ahora = \Carbon\Carbon::now();
+                    $reservaActiva = $p->orden->mesa->reservas()
+                      ->whereIn('estado', ['confirmada', 'pendiente', 'completada'])
+                      ->whereDate('fecha_reserva', $ahora->toDateString())
+                      ->get()
+                      ->first(function($reserva) use ($ahora) {
+                        $horaReserva = \Carbon\Carbon::parse($reserva->fecha_reserva->toDateString() . ' ' . $reserva->hora_reserva);
+                        $inicioReserva = $horaReserva->copy();
+                        $finVentana = $horaReserva->copy()->addHours(3);
+                        return $ahora->between($inicioReserva, $finVentana);
+                      });
+                    
+                    if ($reservaActiva) {
+                      $nombreCliente = $reservaActiva->nombre_cliente ?? 'Orden Directa';
+                    }
+                  }
+                } else {
+                  $nombreCliente = $p->reserva?->nombre_cliente ?? '—';
+                }
+                
+                // Calcular duración
+                $dur = null;
+                $durMinutos = 0;
+                if ($p->en_preparacion_at && $p->preparado_at) {
+                  $diff = $p->en_preparacion_at->diff($p->preparado_at);
+                  $durMinutos = ($diff->h * 60) + $diff->i;
+                  $dur = $diff->format('%H:%I:%S');
+                }
+              @endphp
+              
               <tr>
                 <td>
-                  <small class="text-muted">
-                    {{ $p->reserva?->fecha_reserva?->format('d/m/Y') ?? '—' }}
-                  </small>
+                  <small class="text-muted">{{ $fecha }}</small>
                 </td>
                 <td>
                   <span class="badge bg-success">
@@ -84,16 +138,19 @@
                   </span>
                 </td>
                 <td>
-                  @if($p->reserva?->mesa?->numero)
+                  @if($mesaNumero)
                     <span class="badge bg-secondary">
-                      <i class="bi bi-table"></i> Mesa {{ $p->reserva->mesa->numero }}
+                      <i class="bi bi-table"></i> Mesa {{ $mesaNumero }}
                     </span>
                   @else
                     <span class="text-muted">—</span>
                   @endif
                 </td>
                 <td>
-                  <strong>{{ $p->reserva?->nombre_cliente ?? '—' }}</strong>
+                  <strong>{{ $nombreCliente }}</strong>
+                  @if($esOrden && $nombreCliente === 'Orden Directa')
+                    <span class="badge bg-dark ms-2">Orden Directa</span>
+                  @endif
                 </td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -105,15 +162,6 @@
                   <span class="badge bg-info">{{ $p->cantidad }}</span>
                 </td>
                 <td>
-                  @php
-                    $dur = null;
-                    $durMinutos = 0;
-                    if ($p->en_preparacion_at && $p->preparado_at) {
-                      $diff = $p->en_preparacion_at->diff($p->preparado_at);
-                      $durMinutos = ($diff->h * 60) + $diff->i;
-                      $dur = $diff->format('%H:%I:%S');
-                    }
-                  @endphp
                   @if($dur)
                     <span class="badge {{ $durMinutos <= 15 ? 'bg-success' : ($durMinutos <= 30 ? 'bg-warning' : 'bg-danger') }}">
                       <i class="bi bi-stopwatch"></i> {{ $dur }}
