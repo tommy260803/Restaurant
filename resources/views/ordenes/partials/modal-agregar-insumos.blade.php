@@ -2,12 +2,12 @@
 {{-- Modal: Agregar Insumos/Platos --}}
 <div class="modal fade" id="modalAgregarInsumos" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content" style="background-color: #2d2d44; border: 1px solid #3a3a54;">
+        <div class="modal-content" style="background-color: #ffffff; border: 1px solid #dee2e6;">
             
             {{-- Header --}}
-            <div class="modal-header" style="border-bottom: 1px solid #3a3a54;">
-                <h5 class="modal-title text-white">Agregar Insumos</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="border-bottom: 1px solid #dee2e6; background-color: #f8f9fa;">
+                <h5 class="modal-title text-dark fw-bold">Agregar Insumos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             {{-- Body --}}
@@ -17,14 +17,14 @@
                 <div class="row mb-3">
                     <div class="col-12">
                         <div class="input-group">
-                            <span class="input-group-text" style="background-color: #3a3a54; border-color: #3a3a54; color: #fff;">
+                            <span class="input-group-text" style="background-color: #e9ecef; border-color: #ced4da; color: #495057;">
                                 <i class="bi bi-search"></i>
                             </span>
                             <input type="text" 
                                    class="form-control" 
                                    id="buscar-plato"
                                    placeholder="Buscar plato..."
-                                   style="background-color: #3a3a54; border-color: #3a3a54; color: #fff;">
+                                   style="background-color: #ffffff; border-color: #ced4da; color: #212529;">
                         </div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                 {{-- Mostrar resultados --}}
                 <div class="row mb-2">
                     <div class="col-12">
-                        <small style="color: #b8b8d1;">
+                        <small class="text-muted">
                             Mostrando <span id="mostrar-cantidad">0</span> registros
                         </small>
                     </div>
@@ -40,15 +40,15 @@
 
                 {{-- Tabla de platos disponibles --}}
                 <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-dark table-hover">
-                        <thead style="position: sticky; top: 0; background-color: #1a1a2e; z-index: 10;">
+                    <table class="table table-hover">
+                        <thead style="position: sticky; top: 0; background-color: #f1f3f5; z-index: 10;">
                             <tr>
-                                <th style="color: #e0e0e0;">Nombre</th>
-                                <th style="color: #e0e0e0;">Descripción</th>
-                                <th style="color: #e0e0e0;">Categoría</th>
-                                <th style="color: #e0e0e0;">Código</th>
-                                <th style="color: #e0e0e0;">Precio</th>
-                                <th width="150" style="color: #e0e0e0;">Acción</th>
+                                <th style="color: #495057;">Nombre</th>
+                                <th style="color: #495057;">Descripción</th>
+                                <th style="color: #495057;">Categoría</th>
+                                <th style="color: #495057;">Código</th>
+                                <th style="color: #495057;">Precio</th>
+                                <th width="150" style="color: #495057;">Acción</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-platos-disponibles">
@@ -66,9 +66,9 @@
             </div>
 
             {{-- Footer --}}
-            <div class="modal-footer" style="border-top: 1px solid #3a3a54;">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
-                    Cerrar
+            <div class="modal-footer" style="border-top: 1px solid #dee2e6; background-color: #f8f9fa;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
                 </button>
             </div>
 
@@ -149,7 +149,7 @@ function cargarPlatosDisponibles(buscar = '') {
                 console.warn('⚠️ No hay platos');
                 tbody.html(`
                     <tr>
-                        <td colspan="6" class="text-center py-4" style="color: #b8b8d1;">
+                        <td colspan="6" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             No se encontraron platos disponibles
                         </td>
@@ -170,11 +170,11 @@ function cargarPlatosDisponibles(buscar = '') {
                 
                 const fila = `
                     <tr>
-                        <td style="color: #e8e8f0;">${plato.nombre || 'Sin nombre'}</td>
-                        <td style="color: #b8b8d1;">${plato.descripcion || 'N/A'}</td>
-                        <td style="color: #b8b8d1;">${plato.categoria ? plato.categoria.nombre : 'Sin categoría'}</td>
-                        <td style="color: #b8b8d1;">${plato.idPlatoProducto}</td>
-                        <td style="color: #e8e8f0;">S/. ${parseFloat(plato.precio).toFixed(2)}</td>
+                        <td style="color: #212529; font-weight: 500;">${plato.nombre || 'Sin nombre'}</td>
+                        <td style="color: #6c757d;">${plato.descripcion || 'N/A'}</td>
+                        <td style="color: #6c757d;">${plato.categoria ? plato.categoria.nombre : 'Sin categoría'}</td>
+                        <td style="color: #6c757d;">${plato.idPlatoProducto}</td>
+                        <td style="color: #212529; font-weight: 600;">S/. ${parseFloat(plato.precio).toFixed(2)}</td>
                         <td>
                             <button class="btn btn-sm btn-warning btn-agregar-plato" 
                                     data-plato-id="${plato.idPlatoProducto}"
@@ -260,18 +260,18 @@ function agregarFilaPlato(plato) {
     
     const fila = `
         <tr data-plato-id="${plato.id}">
-            <td style="color: #e8e8f0;">${plato.nombre}</td>
-            <td style="color: #e8e8f0;">S/. ${parseFloat(plato.precio).toFixed(2)}</td>
+            <td style="color: #212529;">${plato.nombre}</td>
+            <td style="color: #212529;">S/. ${parseFloat(plato.precio).toFixed(2)}</td>
             <td>
                 <div class="input-group input-group-sm">
                     <button class="btn btn-cantidad-menos" type="button" style="background-color: #dc3545; border-color: #dc3545; color: #fff;">-</button>
-                    <input type="number" class="form-control text-center input-cantidad" value="${plato.cantidad}" min="1" max="50" style="background-color: #3a3a54; color: #fff; border-color: #3a3a54;">
+                    <input type="number" class="form-control text-center input-cantidad" value="${plato.cantidad}" min="1" max="50" style="background-color: #ffffff; color: #212529; border-color: #ced4da;">
                     <button class="btn btn-cantidad-mas" type="button" style="background-color: #28a745; border-color: #28a745; color: #fff;">+</button>
                 </div>
             </td>
-            <td class="subtotal" style="color: #e8e8f0;">S/. ${subtotal}</td>
+            <td class="subtotal" style="color: #212529; font-weight: 600;">S/. ${subtotal}</td>
             <td>
-                <button class="btn btn-sm btn-nota" style="background-color: #17a2b8; border-color: #17a2b8; color: #fff;" title="Agregar nota">
+                <button class="btn btn-sm btn-nota" style="background-color: #0dcaf0; border-color: #0dcaf0; color: #000;" title="Agregar nota">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>

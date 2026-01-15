@@ -4,12 +4,12 @@
 @section('title', 'Gestión de Órdenes - Mesas')
 
 @section('contenido')
-<div class="container-fluid py-4" style="background-color: #1a1a2e; min-height: 100vh;">
+<div class="container-fluid py-4" style="background-color: #f8f9fa; min-height: 100vh;">
 
     {{-- Header --}}
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="text-white mb-0">Gestión de Órdenes</h2>
+            <h2 class="text-dark mb-0">Gestión de Órdenes</h2>
             <p class="text-muted">Selecciona una mesa para tomar o ver órdenes</p>
         </div>
     </div>
@@ -30,10 +30,10 @@
     @endif
 
     {{-- Navegación de pestañas --}}
-    <ul class="nav nav-tabs mb-4" style="border-bottom: 2px solid #2d2d44;">
+    <ul class="nav nav-tabs mb-4" style="border-bottom: 2px solid #dee2e6;">
         <li class="nav-item">
             <a class="nav-link active"
-                style="background-color: transparent; color: #fff; border-color: transparent; border-bottom: 2px solid #28a745;">
+                style="background-color: transparent; color: #495057; border-color: transparent; border-bottom: 2px solid #28a745; font-weight: 600;">
                 <i class="bi bi-grid-3x3-gap me-2"></i>Mesas
             </a>
         </li>
@@ -49,7 +49,7 @@
         @endphp
 
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
-            <div class="card h-100" style="background-color: #2d2d44; border: 1px solid #3a3a54; border-radius: 8px;">
+            <div class="card h-100 shadow-sm" style="background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px;">
                 <div class="card-body text-center position-relative">
                     
                     {{-- ✅ DISTINTIVO PEQUEÑO: Esquina superior derecha --}}
@@ -78,12 +78,12 @@
                     @endif
                     
                     {{-- Número de mesa --}}
-                    <h5 class="card-title text-white mb-3">
+                    <h5 class="card-title text-dark mb-3 fw-bold">
                         Mesa #{{ $mesa->numero }}
                     </h5>
 
                     {{-- Información adicional --}}
-                    <p class="small mb-3" style="color: #b8b8d1;">
+                    <p class="small mb-3 text-muted">
                         <i class="bi bi-people me-1"></i>Capacidad: {{ $mesa->capacidad }}
                     </p>
 
@@ -106,7 +106,7 @@
                     {{-- Información de próxima reserva --}}
                     @if($estadoCalculado === 'disponible' && $proximaReservaHoy)
                     <div class="alert alert-info py-1 px-2 mb-3"
-                        style="font-size: 0.7rem; background-color: rgba(23, 162, 184, 0.15); border: 1px solid #17a2b8; color: #17a2b8;">
+                        style="font-size: 0.7rem; background-color: rgba(13, 202, 240, 0.15); border: 1px solid #0dcaf0; color: #055160;">
                         <i class="bi bi-calendar-check me-1"></i>
                         <strong>Reserva:</strong><br>
                         {{ \Carbon\Carbon::parse($proximaReservaHoy->hora_reserva)->format('g:i A') }}
@@ -125,7 +125,7 @@
 
                     @if($reservaActual)
                     <div class="alert alert-info py-1 px-2 mb-3"
-                        style="font-size: 0.7rem; background-color: rgba(23, 162, 184, 0.1); border: 1px solid #17a2b8; color: #17a2b8;">
+                        style="font-size: 0.7rem; background-color: rgba(13, 202, 240, 0.15); border: 1px solid #0dcaf0; color: #055160;">
                         <i class="bi bi-person-check me-1"></i>
                         <strong>{{ $reservaActual->nombre_cliente }}</strong>
                         @if($reservaActual->platos->isNotEmpty())
@@ -142,32 +142,27 @@
                     @if($estadoCalculado === 'disponible')
                         <form action="{{ route('ordenes.abrir', $mesa->id) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn w-100"
-                                style="background-color: #28a745; color: #fff; font-weight: 500;">
-                                Abrir Mesa
+                            <button type="submit" class="btn btn-success w-100 fw-semibold">
+                                <i class="bi bi-unlock me-1"></i>Abrir Mesa
                             </button>
                         </form>
                         
                     @elseif($estadoCalculado === 'ocupada')
-                        <a href="{{ route('ordenes.ver', $mesa->id) }}" class="btn w-100"
-                            style="background-color: #ffc107; color: #000; font-weight: 500;">
-                            Ver Órdenes
+                        <a href="{{ route('ordenes.ver', $mesa->id) }}" class="btn btn-warning w-100 fw-semibold text-dark">
+                            <i class="bi bi-eye me-1"></i>Ver Órdenes
                         </a>
                         
                     @elseif($estadoCalculado === 'reservada')
-                        <button class="btn w-100" disabled
-                            style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;">
+                        <button class="btn btn-secondary w-100 fw-semibold" disabled>
                             <i class="bi bi-lock me-1"></i>Reservada
                         </button>
                         
                     @elseif($estadoCalculado === 'mantenimiento')
-                        <button class="btn w-100" disabled
-                            style="background-color: #6c757d; color: #fff; font-weight: 500; cursor: not-allowed;">
+                        <button class="btn btn-danger w-100 fw-semibold" disabled>
                             <i class="bi bi-tools me-1"></i>Mantenimiento
                         </button>
                     @else
-                        <button class="btn w-100" disabled
-                            style="background-color: #6c757d; color: #fff; font-weight: 500;">
+                        <button class="btn btn-secondary w-100 fw-semibold" disabled>
                             No Disponible
                         </button>
                     @endif
@@ -176,7 +171,7 @@
         </div>
         @empty
         <div class="col-12">
-            <div class="alert alert-info" style="background-color: #2d2d44; border-color: #3a3a54; color: #fff;">
+            <div class="alert alert-info">
                 <i class="bi bi-info-circle me-2"></i>No hay mesas registradas en el sistema.
             </div>
         </div>
@@ -186,16 +181,16 @@
     {{-- Leyenda simplificada --}}
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card" style="background-color: #2d2d44; border: 1px solid #3a3a54;">
+            <div class="card shadow-sm" style="background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px;">
                 <div class="card-body">
-                    <h6 class="text-white mb-3">
+                    <h6 class="text-dark mb-3 fw-bold">
                         <i class="bi bi-info-circle me-2"></i>Leyenda:
                     </h6>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <span class="badge bg-success me-2">Libre</span>
-                                <small style="color: #b8b8d1;">Mesa disponible</small>
+                                <small class="text-muted">Mesa disponible</small>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -203,7 +198,7 @@
                                 <span class="badge bg-warning text-dark me-2">
                                     <i class="bi bi-receipt"></i>
                                 </span>
-                                <small style="color: #b8b8d1;">Orden directa</small>
+                                <small class="text-muted">Orden directa</small>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -211,7 +206,7 @@
                                 <span class="badge me-2" style="background: linear-gradient(135deg, #ffc107 0%, #17a2b8 100%); color: #000;">
                                     <i class="bi bi-calendar-check"></i>
                                 </span>
-                                <small style="color: #b8b8d1;">Reserva activa</small>
+                                <small class="text-muted">Reserva activa</small>
                             </div>
                         </div>
                     </div>
@@ -226,8 +221,8 @@
 @push('styles')
 <style>
 body {
-    background-color: #1a1a2e !important;
-    color: #fff;
+    background-color: #f8f9fa !important;
+    color: #212529;
 }
 
 .card {
@@ -236,7 +231,7 @@ body {
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
 .btn:hover:not(:disabled) {
@@ -245,8 +240,13 @@ body {
     transition: all 0.2s ease;
 }
 
+.btn:not(:disabled) {
+    transition: all 0.2s ease;
+}
+
 .badge {
     animation: fadeIn 0.3s ease-in;
+    font-weight: 600;
 }
 
 @keyframes fadeIn {
@@ -263,6 +263,16 @@ body {
 /* Distintivo con sombra sutil */
 .position-absolute.badge {
     z-index: 10;
+}
+
+/* Mejora de contraste en cards */
+.card-title {
+    color: #212529 !important;
+}
+
+/* Sombras más suaves para tema claro */
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 </style>
 @endpush
