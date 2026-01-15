@@ -289,8 +289,8 @@
                             <li class="custom-nav-item"><a href="{{ route('caja.pagos.reservas') }}" class="custom-nav-link">Pagos de Reservas</a></li>
                             <!-- <li class="custom-nav-item"><a href="{{ route('pagos.index') }}"
                                     class="custom-nav-link">Lista de Pagos</a></li> -->
-                            <li class="custom-nav-item"><a href="{{ route('tarifas.index') }}"
-                                    class="custom-nav-link">Tarifas</a></li>
+                            <!-- <li class="custom-nav-item"><a href="{{ route('tarifas.index') }}"
+                                    class="custom-nav-link">Tarifas</a></li> -->
                             <!-- <li class="custom-nav-item"><a href="{{ route('pagos.reportes') }}"
                                     class="custom-nav-link">Reportes Financieros</a></li> -->
                         </ul>
