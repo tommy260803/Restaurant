@@ -85,6 +85,12 @@
         <i class="ri-e-bike-2-line"></i>
         Pide tu Delivery
     </a>
+    <a href="{{ route('delivery.consultar') }}" 
+        class="btn text-white d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm"
+        style="background: #168ea3; border-radius: 10px; font-weight: 600; max-width: 300px;">
+        <i class="ri-e-bike-2-line"></i>
+        Consulta tu Delivery
+    </a>
         </div>
     </div>
 @endsection
