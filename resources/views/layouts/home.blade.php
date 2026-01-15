@@ -6,7 +6,7 @@
     {{-- Header --}}
     <div class="text-center mb-5">
         <div class="header-welcome">
-            <h1 class="h2 fw-bold text-primary mb-2">
+            <h1 class="h2 fw-bold text-gradient mb-2">
                 <i class="bi bi-grid-3x3-gap me-2"></i>
                 Sistema de Gestión de Restaurante
             </h1>
@@ -22,7 +22,7 @@
         {{-- DELIVERY - COCINA --}}
         @if(auth()->user()->hasRole('cocinero') || auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-success bg-opacity-10">
@@ -44,7 +44,7 @@
         {{-- DELIVERY - GESTIÓN --}}
         @if(auth()->user()->hasRole('cajero') || auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-warning bg-opacity-10">
@@ -66,7 +66,7 @@
         {{-- MESAS --}}
         @if(auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-primary bg-opacity-10">
@@ -93,7 +93,7 @@
         {{-- CATEGORÍAS --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('cocinero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-warning bg-opacity-10">
@@ -120,7 +120,7 @@
         {{-- PLATOS --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('cocinero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-success bg-opacity-10">
@@ -147,7 +147,7 @@
         {{-- ÓRDENES --}}
         @if(auth()->user()->hasRole('mesero') || auth()->user()->hasRole('cajero') || auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-danger bg-opacity-10">
@@ -169,7 +169,7 @@
         {{-- RESERVAS --}}
         @if(auth()->user()->hasRole('cajero') || auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-info bg-opacity-10">
@@ -191,7 +191,7 @@
         {{-- COCINA --}}
         @if(auth()->user()->hasRole('cocinero') || auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-secondary bg-opacity-10">
@@ -213,7 +213,7 @@
         {{-- PROVEEDORES --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('almacenero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-dark bg-opacity-10">
@@ -240,7 +240,7 @@
         {{-- COMPRAS --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('almacenero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-primary bg-opacity-10">
@@ -267,7 +267,7 @@
         {{-- INGREDIENTES --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('almacenero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-success bg-opacity-10">
@@ -294,7 +294,7 @@
         {{-- REPORTES --}}
         @if(auth()->user()->hasRole('administrador') || auth()->user()->hasRole('cajero'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-warning bg-opacity-10">
@@ -316,7 +316,7 @@
         {{-- USUARIOS --}}
         @if(auth()->user()->hasRole('administrador'))
         <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card module-card h-100 shadow-sm border-0">
+            <div class="card module-card h-100 shadow border-0">
                 <div class="card-body text-center p-4">
                     <div class="module-icon mb-3">
                         <div class="icon-circle bg-info bg-opacity-10">
@@ -354,43 +354,45 @@
         background-color: #f8f9fa;
     }
     
-    /* Header mejorado */
+    /* Header mejorado con nuevo color */
     .header-welcome {
         padding: 2rem 0;
         animation: fadeInDown 0.5s ease;
     }
     
-    .header-welcome h1 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .text-gradient {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-fill-color: transparent;
     }
     
-    /* Cards de módulos */
+    /* Cards de módulos con sombra más pronunciada */
     .module-card {
         border-radius: 12px;
         transition: all 0.3s ease;
         cursor: pointer;
         animation: fadeInUp 0.5s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
     }
     
     .module-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25) !important;
     }
     
-    /* Iconos de módulos */
+    /* Iconos de módulos más grandes */
     .module-icon {
-        height: 80px;
+        height: 100px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     
     .icon-circle {
-        width: 70px;
-        height: 70px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -399,11 +401,11 @@
     }
     
     .module-card:hover .icon-circle {
-        transform: scale(1.1) rotate(5deg);
+        transform: scale(1.15) rotate(5deg);
     }
     
     .icon-circle i {
-        font-size: 2rem;
+        font-size: 3rem;
     }
     
     /* Títulos de cards */
@@ -476,16 +478,16 @@
         }
         
         .icon-circle {
-            width: 60px;
-            height: 60px;
+            width: 75px;
+            height: 75px;
         }
         
         .icon-circle i {
-            font-size: 1.75rem;
+            font-size: 2.5rem;
         }
         
         .module-icon {
-            height: 70px;
+            height: 85px;
         }
     }
     
